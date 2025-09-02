@@ -146,8 +146,8 @@ namespace LoadPCDtest.Analysis
         }
 
         // RANSAC参数
-        public int MaxIterations { get; set; } = 500; // 减少迭代次数提高速度
-        public float DistanceThreshold { get; set; } = 0.1f; // 10cm阈值
+        public int MaxIterations { get; set; } = 1000; // 减少迭代次数提高速度
+        public float DistanceThreshold { get; set; } = 0.3f; // 10cm阈值
         public int MinPointsForPlane { get; set; } = 100;
         public float MinVerticalAngle { get; set; } = 60.0f; // 最小垂直角度（度）
         public float WallMergeAngleThreshold { get; set; } = 15.0f; // 墙面合并角度阈值（度）- 稍微放宽
