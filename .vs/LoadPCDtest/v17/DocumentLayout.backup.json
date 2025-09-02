@@ -7,16 +7,16 @@
       "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:analysis\\wallseparationanalyzer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\core\\cameracontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:core\\cameracontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\rendering\\trackballrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:rendering\\trackballrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\cloudcompareasciiloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:cloudcompareasciiloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\core\\cameracontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:core\\cameracontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\pcdviewer_new.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -86,24 +86,11 @@
               "Title": "WallSeparationAnalyzer.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Analysis\\WallSeparationAnalyzer.cs",
               "RelativeDocumentMoniker": "Analysis\\WallSeparationAnalyzer.cs",
-              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Analysis\\WallSeparationAnalyzer.cs*",
-              "RelativeToolTip": "Analysis\\WallSeparationAnalyzer.cs*",
-              "ViewState": "AgIAAHsAAAAAAAAAAAAqwJUAAAA6AAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Analysis\\WallSeparationAnalyzer.cs",
+              "RelativeToolTip": "Analysis\\WallSeparationAnalyzer.cs",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAAABIAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-02T09:04:43.105Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "TrackballRenderer.cs",
-              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Rendering\\TrackballRenderer.cs",
-              "RelativeDocumentMoniker": "Rendering\\TrackballRenderer.cs",
-              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Rendering\\TrackballRenderer.cs",
-              "RelativeToolTip": "Rendering\\TrackballRenderer.cs",
-              "ViewState": "AgIAAEsAAAAAAAAAAAAmwE4AAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-02T02:42:01.724Z",
               "EditorCaption": ""
             },
             {
@@ -150,7 +137,7 @@
               "RelativeDocumentMoniker": "Rendering\\PointCloudRenderer.cs",
               "ToolTip": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Rendering\\PointCloudRenderer.cs",
               "RelativeToolTip": "Rendering\\PointCloudRenderer.cs",
-              "ViewState": "AQIAAEAAAAAAAAAAAAAowIYAAAATAAAA",
+              "ViewState": "AgIAAEAAAAAAAAAAAAAowIYAAAATAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-01T11:46:45.524Z"
             },
@@ -162,13 +149,13 @@
               "RelativeDocumentMoniker": "Rendering\\MeshRenderer.cs",
               "ToolTip": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Rendering\\MeshRenderer.cs",
               "RelativeToolTip": "Rendering\\MeshRenderer.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAuwA8AAAAfAAAA",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwA8AAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-01T11:46:32.134Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "CloudCompareASCIILoader.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\CloudCompareASCIILoader.cs",
               "RelativeDocumentMoniker": "CloudCompareASCIILoader.cs",
@@ -186,7 +173,7 @@
               "RelativeDocumentMoniker": "IO\\PointCloudLoader.cs",
               "ToolTip": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\IO\\PointCloudLoader.cs",
               "RelativeToolTip": "IO\\PointCloudLoader.cs",
-              "ViewState": "AQIAAAUAAAAAAAAAAAAowBcAAAA4AAAA",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAowBcAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-01T11:41:57.064Z"
             },
@@ -204,15 +191,27 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "CameraController.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Core\\CameraController.cs",
               "RelativeDocumentMoniker": "Core\\CameraController.cs",
               "ToolTip": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Core\\CameraController.cs",
               "RelativeToolTip": "Core\\CameraController.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAAB4AAAAeAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB4AAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-01T11:41:16.299Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "TrackballRenderer.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Rendering\\TrackballRenderer.cs",
+              "RelativeDocumentMoniker": "Rendering\\TrackballRenderer.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Rendering\\TrackballRenderer.cs",
+              "RelativeToolTip": "Rendering\\TrackballRenderer.cs",
+              "ViewState": "AgIAAEsAAAAAAAAAAAAmwE4AAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-02T02:42:01.724Z"
             },
             {
               "$type": "Document",
@@ -270,7 +269,7 @@
               "RelativeDocumentMoniker": "Rendering\\ColorManager.cs",
               "ToolTip": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Rendering\\ColorManager.cs",
               "RelativeToolTip": "Rendering\\ColorManager.cs",
-              "ViewState": "AQIAAH8AAAAAAAAAAAAswKYAAABoAAAA",
+              "ViewState": "AgIAAH8AAAAAAAAAAAAswKYAAABoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-01T11:54:52.688Z"
             }

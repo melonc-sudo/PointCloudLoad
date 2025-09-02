@@ -237,7 +237,6 @@ C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\OpenTK.pdb
 C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\OpenTK.xml
 C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\OpenTK.GLControl.pdb
 C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\OpenTK.GLControl.xml
-C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\SharpDX.xml
 C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\Kitware.mummy.Runtime.Unmanaged.dll
 C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\Kitware.VTK.vtkCharts.Unmanaged.dll
 C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\Kitware.VTK.vtkCommon.Unmanaged.dll
@@ -293,10 +292,11 @@ C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\msvcm90.dll
 C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\msvcp90.dll
 C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\msvcr90.dll
 C:\Users\admin\Desktop\work\PointCloudLoad\obj\Debug\LoadPCDtest.csproj.AssemblyReference.cache
-C:\Users\admin\Desktop\work\PointCloudLoad\obj\Debug\LoadPCDtest.exe.config
 C:\Users\admin\Desktop\work\PointCloudLoad\obj\Debug\LoadPCDtest.Properties.Resources.resources
 C:\Users\admin\Desktop\work\PointCloudLoad\obj\Debug\LoadPCDtest.csproj.GenerateResource.cache
 C:\Users\admin\Desktop\work\PointCloudLoad\obj\Debug\LoadPCDtest.csproj.CoreCompileInputs.cache
 C:\Users\admin\Desktop\work\PointCloudLoad\obj\Debug\LoadPCDt.87C4C3C6.Up2Date
 C:\Users\admin\Desktop\work\PointCloudLoad\obj\Debug\LoadPCDtest.exe
 C:\Users\admin\Desktop\work\PointCloudLoad\obj\Debug\LoadPCDtest.pdb
+C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\OpenTK.dll
+C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\OpenTK.GLControl.dll
