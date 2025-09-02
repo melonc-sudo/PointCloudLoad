@@ -1,0 +1,282 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|c:\\users\\admin\\desktop\\work\\loadpcdtest_1\\analysis\\wallseparationanalyzer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:analysis\\wallseparationanalyzer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\cloudcompareasciiloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:cloudcompareasciiloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\core\\cameracontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:core\\cameracontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\pcdviewer_new.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:pcdviewer_new.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\rendering\\trackballrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:rendering\\trackballrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\rangeselectionwindow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:rangeselectionwindow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\filtering\\pointcloudfilter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:filtering\\pointcloudfilter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\core\\coordinatemapper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:core\\coordinatemapper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\core\\pointclouddata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:core\\pointclouddata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\surfacereconstruction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:surfacereconstruction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\plyloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:plyloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\rendering\\pointcloudrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:rendering\\pointcloudrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\io\\pointcloudloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:io\\pointcloudloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\rendering\\colormanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:rendering\\colormanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\rendering\\meshrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:rendering\\meshrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 858,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "TrackballRenderer.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Rendering\\TrackballRenderer.cs",
+              "RelativeDocumentMoniker": "Rendering\\TrackballRenderer.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Rendering\\TrackballRenderer.cs",
+              "RelativeToolTip": "Rendering\\TrackballRenderer.cs",
+              "ViewState": "AgIAAEsAAAAAAAAAAAAmwE4AAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-02T02:42:01.724Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "WallSeparationAnalyzer.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Analysis\\WallSeparationAnalyzer.cs",
+              "RelativeDocumentMoniker": "Analysis\\WallSeparationAnalyzer.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Analysis\\WallSeparationAnalyzer.cs",
+              "RelativeToolTip": "Analysis\\WallSeparationAnalyzer.cs",
+              "ViewState": "AgIAAAYDAAAAAAAAAAAuwFoDAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-02T02:40:12.99Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvwAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-02T02:27:13.159Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "PLYLoader.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\PLYLoader.cs",
+              "RelativeDocumentMoniker": "PLYLoader.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\PLYLoader.cs",
+              "RelativeToolTip": "PLYLoader.cs",
+              "ViewState": "AgIAAOQAAAAAAAAAAAAYwKIAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-01T12:26:00.821Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "CoordinateMapper.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Core\\CoordinateMapper.cs",
+              "RelativeDocumentMoniker": "Core\\CoordinateMapper.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Core\\CoordinateMapper.cs",
+              "RelativeToolTip": "Core\\CoordinateMapper.cs",
+              "ViewState": "AgIAAHMAAAAAAAAAAAAUwGQAAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-01T11:41:23.349Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "PointCloudRenderer.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Rendering\\PointCloudRenderer.cs",
+              "RelativeDocumentMoniker": "Rendering\\PointCloudRenderer.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Rendering\\PointCloudRenderer.cs",
+              "RelativeToolTip": "Rendering\\PointCloudRenderer.cs",
+              "ViewState": "AQIAAEAAAAAAAAAAAAAowIYAAAATAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-01T11:46:45.524Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "MeshRenderer.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Rendering\\MeshRenderer.cs",
+              "RelativeDocumentMoniker": "Rendering\\MeshRenderer.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Rendering\\MeshRenderer.cs",
+              "RelativeToolTip": "Rendering\\MeshRenderer.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAuwA8AAAAfAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-01T11:46:32.134Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "CloudCompareASCIILoader.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\CloudCompareASCIILoader.cs",
+              "RelativeDocumentMoniker": "CloudCompareASCIILoader.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\CloudCompareASCIILoader.cs",
+              "RelativeToolTip": "CloudCompareASCIILoader.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC4AAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-01T11:45:18.296Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "PointCloudLoader.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\IO\\PointCloudLoader.cs",
+              "RelativeDocumentMoniker": "IO\\PointCloudLoader.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\IO\\PointCloudLoader.cs",
+              "RelativeToolTip": "IO\\PointCloudLoader.cs",
+              "ViewState": "AQIAAAUAAAAAAAAAAAAowBcAAAA4AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-01T11:41:57.064Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "PCDViewer_New.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\PCDViewer_New.cs",
+              "RelativeDocumentMoniker": "PCDViewer_New.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\PCDViewer_New.cs",
+              "RelativeToolTip": "PCDViewer_New.cs",
+              "ViewState": "AgIAAMoDAAAAAAAAAAAiwIkDAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-01T11:38:39.234Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "CameraController.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Core\\CameraController.cs",
+              "RelativeDocumentMoniker": "Core\\CameraController.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Core\\CameraController.cs",
+              "RelativeToolTip": "Core\\CameraController.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAB4AAAAeAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-01T11:41:16.299Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "RangeSelectionWindow.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\RangeSelectionWindow.cs",
+              "RelativeDocumentMoniker": "RangeSelectionWindow.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\RangeSelectionWindow.cs",
+              "RelativeToolTip": "RangeSelectionWindow.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-02T02:41:57.415Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "PointCloudFilter.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Filtering\\PointCloudFilter.cs",
+              "RelativeDocumentMoniker": "Filtering\\PointCloudFilter.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Filtering\\PointCloudFilter.cs",
+              "RelativeToolTip": "Filtering\\PointCloudFilter.cs",
+              "ViewState": "AgIAAEEAAAAAAAAAAAAQwGMAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-01T11:41:40.371Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "PointCloudData.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Core\\PointCloudData.cs",
+              "RelativeDocumentMoniker": "Core\\PointCloudData.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Core\\PointCloudData.cs",
+              "RelativeToolTip": "Core\\PointCloudData.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-01T11:41:33.931Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "SurfaceReconstruction.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\SurfaceReconstruction.cs",
+              "RelativeDocumentMoniker": "SurfaceReconstruction.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\SurfaceReconstruction.cs",
+              "RelativeToolTip": "SurfaceReconstruction.cs",
+              "ViewState": "AgIAAHcAAAAAAAAAAAAswA4AAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-02T01:46:47.118Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "ColorManager.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Rendering\\ColorManager.cs",
+              "RelativeDocumentMoniker": "Rendering\\ColorManager.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\LoadPCDtest_1\\Rendering\\ColorManager.cs",
+              "RelativeToolTip": "Rendering\\ColorManager.cs",
+              "ViewState": "AQIAAH8AAAAAAAAAAAAswKYAAABoAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-01T11:54:52.688Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
