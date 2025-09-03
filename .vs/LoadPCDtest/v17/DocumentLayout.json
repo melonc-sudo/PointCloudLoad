@@ -3,7 +3,11 @@
   "WorkspaceRootPath": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|c:\\users\\admin\\desktop\\work\\pointcloudload\\analysis\\wallseparationanalyzer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|c:\\users\\admin\\desktop\\work\\pointcloudload\\rendering\\pointcloudrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:rendering\\pointcloudrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\analysis\\wallseparationanalyzer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:analysis\\wallseparationanalyzer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -51,10 +55,6 @@
       "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\rendering\\pointcloudrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:rendering\\pointcloudrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\io\\pointcloudloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:io\\pointcloudloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -74,7 +74,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 858,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Bookmark",
@@ -82,7 +82,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "WallSeparationAnalyzer.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Analysis\\WallSeparationAnalyzer.cs",
               "RelativeDocumentMoniker": "Analysis\\WallSeparationAnalyzer.cs",
@@ -90,24 +90,11 @@
               "RelativeToolTip": "Analysis\\WallSeparationAnalyzer.cs",
               "ViewState": "AgIAAAIAAAAAAAAAAAAAABIAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-02T09:04:43.105Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-02T09:04:43.105Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 11,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAADwvwAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-02T02:27:13.159Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
               "Title": "PLYLoader.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\PLYLoader.cs",
               "RelativeDocumentMoniker": "PLYLoader.cs",
@@ -119,7 +106,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "CoordinateMapper.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Core\\CoordinateMapper.cs",
               "RelativeDocumentMoniker": "Core\\CoordinateMapper.cs",
@@ -131,15 +118,28 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 0,
               "Title": "PointCloudRenderer.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Rendering\\PointCloudRenderer.cs",
               "RelativeDocumentMoniker": "Rendering\\PointCloudRenderer.cs",
               "ToolTip": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Rendering\\PointCloudRenderer.cs",
               "RelativeToolTip": "Rendering\\PointCloudRenderer.cs",
-              "ViewState": "AgIAAEAAAAAAAAAAAAAowIYAAAATAAAAAAAAAA==",
+              "ViewState": "AgIAACIBAAAAAAAAAAArwI0AAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-01T11:46:45.524Z"
+              "WhenOpened": "2025-09-01T11:46:45.524Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvwAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-02T02:27:13.159Z"
             },
             {
               "$type": "Document",
@@ -155,7 +155,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "CloudCompareASCIILoader.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\CloudCompareASCIILoader.cs",
               "RelativeDocumentMoniker": "CloudCompareASCIILoader.cs",
@@ -179,7 +179,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "PCDViewer_New.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\PCDViewer_New.cs",
               "RelativeDocumentMoniker": "PCDViewer_New.cs",
@@ -191,7 +191,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "CameraController.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Core\\CameraController.cs",
               "RelativeDocumentMoniker": "Core\\CameraController.cs",
@@ -203,7 +203,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "TrackballRenderer.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Rendering\\TrackballRenderer.cs",
               "RelativeDocumentMoniker": "Rendering\\TrackballRenderer.cs",
@@ -215,7 +215,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "RangeSelectionWindow.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\RangeSelectionWindow.cs",
               "RelativeDocumentMoniker": "RangeSelectionWindow.cs",
@@ -227,7 +227,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "PointCloudFilter.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Filtering\\PointCloudFilter.cs",
               "RelativeDocumentMoniker": "Filtering\\PointCloudFilter.cs",
@@ -239,7 +239,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "PointCloudData.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\Core\\PointCloudData.cs",
               "RelativeDocumentMoniker": "Core\\PointCloudData.cs",
@@ -251,7 +251,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "SurfaceReconstruction.cs",
               "DocumentMoniker": "C:\\Users\\admin\\Desktop\\work\\PointCloudLoad\\SurfaceReconstruction.cs",
               "RelativeDocumentMoniker": "SurfaceReconstruction.cs",

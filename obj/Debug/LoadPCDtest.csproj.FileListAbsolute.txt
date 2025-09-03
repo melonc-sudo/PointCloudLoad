@@ -300,3 +300,4 @@ C:\Users\admin\Desktop\work\PointCloudLoad\obj\Debug\LoadPCDtest.exe
 C:\Users\admin\Desktop\work\PointCloudLoad\obj\Debug\LoadPCDtest.pdb
 C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\OpenTK.dll
 C:\Users\admin\Desktop\work\PointCloudLoad\bin\Debug\OpenTK.GLControl.dll
+C:\Users\admin\Desktop\work\PointCloudLoad\obj\Debug\LoadPCDtest.exe.config

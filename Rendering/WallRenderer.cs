@@ -138,6 +138,87 @@ namespace LoadPCDtest.Rendering
         }
 
         /// <summary>
+        /// 在每个垂直墙面的主平面上渲染“四侧包围”矩形框（线框），用于强调墙体边界
+        /// thickness: 线宽近似（像素），inset: 从点云边界向内收缩的距离（米）
+        /// </summary>
+        public void RenderWallFourSidedBoxes(List<WallSeparationAnalyzer.Wall> walls, float thickness, float inset)
+        {
+            if (walls == null || walls.Count == 0)
+                return;
+
+            float lineWidthPx = Math.Max(1.0f, thickness * 20.0f);
+            GL.LineWidth(lineWidthPx);
+
+            foreach (var wall in walls)
+            {
+                if (!IsWallVisible(wall.Direction) || wall.Points == null || wall.Points.Count == 0)
+                    continue;
+                if (wall.Direction == WallSeparationAnalyzer.WallDirection.Horizontal)
+                    continue;
+
+                // 计算边界
+                var min = new Vector3(float.MaxValue);
+                var max = new Vector3(float.MinValue);
+                foreach (var p in wall.Points)
+                {
+                    if (p.X < min.X) min.X = p.X;
+                    if (p.Y < min.Y) min.Y = p.Y;
+                    if (p.Z < min.Z) min.Z = p.Z;
+                    if (p.X > max.X) max.X = p.X;
+                    if (p.Y > max.Y) max.Y = p.Y;
+                    if (p.Z > max.Z) max.Z = p.Z;
+                }
+
+                // 颜色
+                GL.Color3(Math.Min(1.0f, wall.Color.X * 1.0f), Math.Min(1.0f, wall.Color.Y * 1.0f), Math.Min(1.0f, wall.Color.Z * 1.0f));
+
+                GL.Begin(PrimitiveType.Lines);
+
+                switch (wall.Direction)
+                {
+                    case WallSeparationAnalyzer.WallDirection.East:
+                    case WallSeparationAnalyzer.WallDirection.West:
+                    {
+                        float x = wall.Direction == WallSeparationAnalyzer.WallDirection.East ? max.X : min.X;
+                        float y1 = min.Y + inset;
+                        float y2 = max.Y - inset;
+                        float z1 = min.Z + inset;
+                        float z2 = max.Z - inset;
+                        if (y1 <= y2 && z1 <= z2)
+                        {
+                            GL.Vertex3(x, y1, z1); GL.Vertex3(x, y2, z1);
+                            GL.Vertex3(x, y2, z1); GL.Vertex3(x, y2, z2);
+                            GL.Vertex3(x, y2, z2); GL.Vertex3(x, y1, z2);
+                            GL.Vertex3(x, y1, z2); GL.Vertex3(x, y1, z1);
+                        }
+                        break;
+                    }
+                    case WallSeparationAnalyzer.WallDirection.North:
+                    case WallSeparationAnalyzer.WallDirection.South:
+                    {
+                        float y = wall.Direction == WallSeparationAnalyzer.WallDirection.North ? max.Y : min.Y;
+                        float x1 = min.X + inset;
+                        float x2 = max.X - inset;
+                        float z1 = min.Z + inset;
+                        float z2 = max.Z - inset;
+                        if (x1 <= x2 && z1 <= z2)
+                        {
+                            GL.Vertex3(x1, y, z1); GL.Vertex3(x2, y, z1);
+                            GL.Vertex3(x2, y, z1); GL.Vertex3(x2, y, z2);
+                            GL.Vertex3(x2, y, z2); GL.Vertex3(x1, y, z2);
+                            GL.Vertex3(x1, y, z2); GL.Vertex3(x1, y, z1);
+                        }
+                        break;
+                    }
+                }
+
+                GL.End();
+            }
+
+            GL.LineWidth(1.0f);
+        }
+
+        /// <summary>
         /// 渲染墙面统计信息
         /// </summary>
         public void RenderWallStatistics(List<WallSeparationAnalyzer.Wall> walls, Vector3 basePosition)

@@ -251,4 +251,41 @@ public class PLYLoader
             return false;
         }
     }
+
+    /// <summary>
+    /// 将点集合导出为 ASCII PLY（仅顶点，无面/法线/颜色）
+    /// </summary>
+    public static void SavePLY(string filePath, IList<Vector3> points)
+    {
+        if (points == null || points.Count == 0)
+            throw new ArgumentException("没有可导出的点");
+
+        try
+        {
+            using (var writer = new StreamWriter(filePath))
+            {
+                // Header
+                writer.WriteLine("ply");
+                writer.WriteLine("format ascii 1.0");
+                writer.WriteLine($"element vertex {points.Count}");
+                writer.WriteLine("property float x");
+                writer.WriteLine("property float y");
+                writer.WriteLine("property float z");
+                writer.WriteLine("end_header");
+
+                // Body
+                foreach (var p in points)
+                {
+                    writer.WriteLine($"{p.X} {p.Y} {p.Z}");
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"PLY导出完成: {filePath} ({points.Count:N0} 点)");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"导出PLY失败: {ex.Message}");
+            throw;
+        }
+    }
 }

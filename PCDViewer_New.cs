@@ -171,9 +171,14 @@ namespace LoadPCDtest
             showWallBoundingBoxMenuItem.CheckOnClick = true;
             showWallBoundingBoxMenuItem.Click += (s, e) => ToggleWallBoundingBoxDisplay();
             
+            var showWallFourSidedBoxMenuItem = new ToolStripMenuItem("显示墙体四侧包围(&Q)");
+            showWallFourSidedBoxMenuItem.CheckOnClick = true;
+            showWallFourSidedBoxMenuItem.Click += (s, e) => ToggleWallFourSidedBoxes();
+
             wallDisplaySubMenu.DropDownItems.Add(showWallsMenuItem);
             wallDisplaySubMenu.DropDownItems.Add(showOriginalPointsMenuItem);
             wallDisplaySubMenu.DropDownItems.Add(showWallBoundingBoxMenuItem);
+            wallDisplaySubMenu.DropDownItems.Add(showWallFourSidedBoxMenuItem);
             
             // 各个墙面的显示控制
             wallDisplaySubMenu.DropDownItems.Add(new ToolStripSeparator());
@@ -208,6 +213,23 @@ namespace LoadPCDtest
             wallDisplaySubMenu.DropDownItems.Add(horizontalSurfaceMenuItem);
             
             displayMenu.DropDownItems.Add(wallDisplaySubMenu);
+
+            // 建筑包裹外立面（点云）
+            displayMenu.DropDownItems.Add(new ToolStripSeparator());
+            var generateEnclosureWallsMenuItem = new ToolStripMenuItem("生成建筑包裹外立面(&G)");
+            generateEnclosureWallsMenuItem.Click += (s, e) => GenerateEnclosureWalls();
+            generateEnclosureWallsMenuItem.ToolTipText = "根据建筑物轮廓生成完整的包裹性外立面点云";
+            var showEnclosureWallsMenuItem = new ToolStripMenuItem("显示建筑包裹外立面(&V)");
+            showEnclosureWallsMenuItem.CheckOnClick = true;
+            showEnclosureWallsMenuItem.Click += (s, e) => ToggleEnclosureWalls();
+            showEnclosureWallsMenuItem.ToolTipText = "切换显示/隐藏生成的包裹外立面点云";
+            displayMenu.DropDownItems.Add(generateEnclosureWallsMenuItem);
+            displayMenu.DropDownItems.Add(showEnclosureWallsMenuItem);
+
+            // 导出包裹外立面为PLY
+            var exportEnclosureMenuItem = new ToolStripMenuItem("导出包裹外立面为PLY(&E)");
+            exportEnclosureMenuItem.Click += (s, e) => ExportEnclosureWallsAsPLY();
+            displayMenu.DropDownItems.Add(exportEnclosureMenuItem);
             
             menuStrip.Items.Add(fileMenu);
             menuStrip.Items.Add(toolsMenu);
@@ -511,6 +533,9 @@ namespace LoadPCDtest
                 pointCloudData.ObjectScale = 1.0f;                       // 原版本默认
                 camera.Distance = 10f;                                   // 原版本默认
                 
+                // 将原始点云引用传入渲染器，供外立面紧凑包裹算法使用
+                renderer.SetOriginalPointCloudData(pointCloudData);
+
                 // 重置相机到默认状态
                 camera.ResetToDefault();
 
@@ -949,6 +974,16 @@ namespace LoadPCDtest
         }
 
         /// <summary>
+        /// 切换墙体四侧包围显示
+        /// </summary>
+        private void ToggleWallFourSidedBoxes()
+        {
+            renderer.ShowWallFourSidedBoxes = !renderer.ShowWallFourSidedBoxes;
+            gl.Invalidate();
+            System.Diagnostics.Debug.WriteLine($"墙体四侧包围显示: {(renderer.ShowWallFourSidedBoxes ? "开启" : "关闭")}");
+        }
+
+        /// <summary>
         /// 切换北墙显示
         /// </summary>
         private void ToggleNorthWall()
@@ -1030,6 +1065,105 @@ namespace LoadPCDtest
                     gl.Invalidate();
                     System.Diagnostics.Debug.WriteLine($"水平面显示: {(wallRenderer.ShowHorizontalSurfaces ? "开启" : "关闭")}");
                 }
+            }
+        }
+
+        /// <summary>
+        /// 生成建筑包裹外立面点云（基于建筑物整体轮廓生成四个方向的完整外立面）
+        /// </summary>
+        private void GenerateEnclosureWalls()
+        {
+            if (renderer.CurrentWalls == null || renderer.CurrentWalls.Count == 0)
+            {
+                MessageBox.Show("请先执行墙面分离，检测到墙面后才能生成包裹外立面", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // 输入参数：采样步长和扩展量
+            string input = Microsoft.VisualBasic.Interaction.InputBox(
+                "生成建筑包裹外立面点云参数设置:\n\n" +
+                "采样步长,扩展距离(米) - 逗号分隔\n" +
+                "• 步长: 点云密度控制(0.1-0.3推荐)\n" +
+                "• 扩展: 外立面距离建筑的距离(0.2-0.5推荐)\n\n" +
+                "例如: 0.2, 0.3",
+                "生成建筑包裹外立面",
+                "0.2, 0.3");
+
+            if (string.IsNullOrWhiteSpace(input)) return;
+
+            float step = 0.2f, expand = 0.3f;
+            try
+            {
+                var parts = input.Split(',');
+                if (parts.Length >= 1) float.TryParse(parts[0].Trim(), out step);
+                if (parts.Length >= 2) float.TryParse(parts[1].Trim(), out expand);
+            }
+            catch { }
+
+            this.Cursor = Cursors.WaitCursor;
+            
+            try
+            {
+                renderer.GenerateEnclosureWallsFromWalls(renderer.CurrentWalls, step, expand);
+                renderer.ShowEnclosureWalls = true;
+                gl.Invalidate();
+
+                var verticalWalls = renderer.CurrentWalls.Where(w => w.Direction != WallSeparationAnalyzer.WallDirection.Horizontal).ToList();
+                MessageBox.Show($"✅ 建筑包裹外立面生成完成！\n\n" +
+                    $"📊 生成统计:\n" +
+                    $"• 检测到墙面方向: {verticalWalls.Count}个\n" +
+                    $"• 采样步长: {step:F2}m\n" +
+                    $"• 扩展距离: {expand:F2}m\n\n" +
+                    $"💡 现在您可以看到黄色的包裹外立面点云，它们形成一个完整的建筑外壳。", 
+                    "生成完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        /// <summary>
+        /// 切换建筑包裹外立面点云显示
+        /// </summary>
+        private void ToggleEnclosureWalls()
+        {
+            renderer.ShowEnclosureWalls = !renderer.ShowEnclosureWalls;
+            gl.Invalidate();
+            System.Diagnostics.Debug.WriteLine($"建筑包裹外立面点云显示: {(renderer.ShowEnclosureWalls ? "开启" : "关闭")}");
+        }
+
+        /// <summary>
+        /// 导出当前生成的包裹外立面为PLY
+        /// </summary>
+        private void ExportEnclosureWallsAsPLY()
+        {
+            try
+            {
+                var pts = renderer.GetEnclosureWallPoints();
+                if (pts == null || pts.Count == 0)
+                {
+                    MessageBox.Show("尚未生成包裹外立面点云，请先执行‘生成建筑包裹外立面’。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                using (var dlg = new SaveFileDialog()
+                {
+                    Title = "导出包裹外立面为PLY",
+                    Filter = "PLY 文件 (*.ply)|*.ply",
+                    FileName = "enclosure_facade.ply"
+                })
+                {
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        PLYLoader.SavePLY(dlg.FileName, new List<Vector3>(pts));
+                        MessageBox.Show("导出完成！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
