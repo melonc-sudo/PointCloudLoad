@@ -397,20 +397,20 @@ namespace LoadPCDtest
                     ResetPointSize();
                     break;
                 case Keys.F1:
-                    // F1：切换东面显示/隐藏
-                    ToggleFacade(Analysis.FacadeManager.FacadeType.East);
+                    // F1：切换主方向正面显示/隐藏
+                    ToggleFacade(Analysis.FacadeManager.FacadeType.MainPositive);
                     break;
                 case Keys.F2:
-                    // F2：切换西面显示/隐藏
-                    ToggleFacade(Analysis.FacadeManager.FacadeType.West);
+                    // F2：切换主方向负面显示/隐藏
+                    ToggleFacade(Analysis.FacadeManager.FacadeType.MainNegative);
                     break;
                 case Keys.F3:
-                    // F3：切换南面显示/隐藏
-                    ToggleFacade(Analysis.FacadeManager.FacadeType.South);
+                    // F3：切换垂直方向正面显示/隐藏
+                    ToggleFacade(Analysis.FacadeManager.FacadeType.PerpPositive);
                     break;
                 case Keys.F4:
-                    // F4：切换北面显示/隐藏
-                    ToggleFacade(Analysis.FacadeManager.FacadeType.North);
+                    // F4：切换垂直方向负面显示/隐藏
+                    ToggleFacade(Analysis.FacadeManager.FacadeType.PerpNegative);
                     break;
                 case Keys.F5:
                     // F5：显示所有立面
@@ -856,7 +856,7 @@ namespace LoadPCDtest
                 
                 Text = $"点云查看器 - {fileName} ({pointCloudData.Points.Count:N0} 个点) - " +
                        $"缩放:{camera.GlobalScale:F1}x 点大小:{renderer.PointSize:F1} - " +
-                       $"{mappingName} - {colorMode}{facadeInfo}{generatedFacadeInfo} [P:原始点云 G:生成立面 F1-F4:立面控制]";
+                       $"{mappingName} - {colorMode}{facadeInfo}{generatedFacadeInfo} [P:原始点云 G:生成立面 F1:主正面 F2:主负面 F3:垂直正面 F4:垂直负面]";
             }
             else
             {
