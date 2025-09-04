@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using OpenTK;
+using System.Windows.Forms;
 
 namespace LoadPCDtest.Analysis
 {
@@ -11,23 +13,15 @@ namespace LoadPCDtest.Analysis
     public class FacadeManager
     {
         /// <summary>
-        /// 立面生成策略
-        /// </summary>
-        public enum FacadeGenerationMode
-        {
-            RotatedBox,     // 旧：基于旋转坐标系的矩形四面
-            ExtrudedHull    // 新：基于XY外轮廓挤出的立面
-        }
-            /// <summary>
     /// 立面类型枚举 - 使用相对方向而非绝对地理方向
-    /// </summary>
-    public enum FacadeType
-    {
+        /// </summary>
+        public enum FacadeType
+        {
         MainPositive,   // 主方向正面 (建筑主轴正方向)
         MainNegative,   // 主方向负面 (建筑主轴负方向)
         PerpPositive,   // 垂直方向正面 (建筑副轴正方向)
         PerpNegative    // 垂直方向负面 (建筑副轴负方向)
-    }
+        }
 
         /// <summary>
         /// 立面显示状态
@@ -47,10 +41,9 @@ namespace LoadPCDtest.Analysis
         private bool isInitialized = false;
         private int lastAnalyzedPointCount = 0;
         private List<Vector3> generatedFacadePoints = new List<Vector3>(); // 所有生成的立面点的集合
-        private float buildingAzimuth = 0.0f; // 建筑主方向的真实方位角（度，北方为0度，顺时针为正）
+        
         private Vector2 buildingMainDirection = Vector2.Zero; // 建筑主方向向量（归一化）
         private Vector2 buildingPerpDirection = Vector2.Zero; // 建筑垂直方向向量（归一化）
-        private FacadeGenerationMode generationMode = FacadeGenerationMode.ExtrudedHull; // 默认采用外轮廓挤出
 
         /// <summary>
         /// 获取是否已初始化
@@ -133,17 +126,10 @@ namespace LoadPCDtest.Analysis
             var size = max - min;
             
             System.Diagnostics.Debug.WriteLine($"立面分析: 中心=({center.X:F2}, {center.Y:F2}), 尺寸=({size.X:F2}, {size.Y:F2})");
-            System.Diagnostics.Debug.WriteLine($"分割策略: 外围立面提取法");
-            
-            // 步骤1(弃用作方向估计): 提取建筑外围点（仅作为参考，不再用于PCA方向估计）
-            System.Diagnostics.Debug.WriteLine("开始提取建筑外围(仅供参考)...");
-            var outerPoints = ExtractOuterPerimeter(points);
-            System.Diagnostics.Debug.WriteLine($"外围点提取: {points.Count} → {outerPoints.Count} 个点");
-
-            // 步骤2: 使用鲁棒PCA计算建筑主方向（基于全部点进行剪裁后统计）
+            // 步骤1: 使用鲁棒PCA计算建筑主方向（基于全部点进行剪裁后统计）
             System.Diagnostics.Debug.WriteLine("开始计算建筑主方向(鲁棒PCA)...");
 
-            // 2.1 计算全部点的中心（仅XY）
+            // 1.1 计算全部点的中心（仅XY）
             double meanX_all = 0, meanY_all = 0;
             for (int i_all = 0; i_all < points.Count; i_all++)
             {
@@ -153,7 +139,7 @@ namespace LoadPCDtest.Analysis
             meanX_all /= points.Count;
             meanY_all /= points.Count;
 
-            // 2.2 计算到中心的半径平方并做剪裁(去除远端离群点，默认保留95%内点)
+            // 1.2 计算到中心的半径平方并做剪裁(去除远端离群点，默认保留95%内点)
             var radiiSq = new List<double>(points.Count);
             for (int i_r = 0; i_r < points.Count; i_r++)
             {
@@ -167,7 +153,7 @@ namespace LoadPCDtest.Analysis
             if (keepIndex >= radiiSq.Count) keepIndex = radiiSq.Count - 1;
             double radiusSqThreshold = radiiSq[keepIndex];
 
-            // 2.3 过滤出剪裁后的点集
+            // 1.3 过滤出剪裁后的点集
             var robustPoints = new List<Vector3>(Math.Max(1000, points.Count / 2));
             for (int i_f = 0; i_f < points.Count; i_f++)
             {
@@ -180,7 +166,7 @@ namespace LoadPCDtest.Analysis
             }
             System.Diagnostics.Debug.WriteLine($"鲁棒PCA: 剪裁后参与统计的点数 = {robustPoints.Count}/{points.Count}");
 
-            // 2.4 基于robustPoints计算均值
+            // 1.4 基于robustPoints计算均值
             double sumX = 0, sumY = 0;
             foreach (var p in robustPoints)
             {
@@ -190,7 +176,7 @@ namespace LoadPCDtest.Analysis
             double meanX = sumX / robustPoints.Count;
             double meanY = sumY / robustPoints.Count;
             
-            // 2.5 协方差
+            // 1.5 协方差
             double cov_xx = 0, cov_xy = 0, cov_yy = 0;
             foreach (var p in robustPoints)
             {
@@ -204,7 +190,7 @@ namespace LoadPCDtest.Analysis
             cov_xy /= robustPoints.Count;
             cov_yy /= robustPoints.Count;
 
-            // 2.6 求主方向
+            // 1.6 求主方向
             double trace = cov_xx + cov_yy;
             double det = cov_xx * cov_yy - cov_xy * cov_xy;
             double lambda1 = (trace + Math.Sqrt(Math.Max(0, trace * trace - 4 * det))) / 2;
@@ -219,8 +205,8 @@ namespace LoadPCDtest.Analysis
                 mainDirX = 1.0;
                 mainDirY = 0.0;
             }
-
-            // 2.7 归一化与象限一致性
+            
+            // 1.7 归一化与象限一致性
             double length = Math.Sqrt(mainDirX * mainDirX + mainDirY * mainDirY);
             mainDirX /= length;
             mainDirY /= length;
@@ -231,138 +217,22 @@ namespace LoadPCDtest.Analysis
             }
             double perpDirX = -mainDirY;
             double perpDirY = mainDirX;
-
-            // 2.8 保存方位与调试输出
-            buildingAzimuth = CalculateTrueAzimuth((float)mainDirX, (float)mainDirY);
+            
+            // 1.8 保存方位与调试输出
+            var computedMainAzimuth = CalculateTrueAzimuth((float)mainDirX, (float)mainDirY);
             buildingMainDirection = new Vector2((float)mainDirX, (float)mainDirY);
             buildingPerpDirection = new Vector2((float)perpDirX, (float)perpDirY);
-            System.Diagnostics.Debug.WriteLine($"鲁棒PCA结果: main=({mainDirX:F4},{mainDirY:F4}) perp=({perpDirX:F4},{perpDirY:F4}) azimuth={buildingAzimuth:F1}°");
+            System.Diagnostics.Debug.WriteLine($"鲁棒PCA结果: main=({mainDirX:F4},{mainDirY:F4}) perp=({perpDirX:F4},{perpDirY:F4}) azimuth={computedMainAzimuth:F1}°");
 
-            // 步骤3: 将所有点投影到主方向坐标系（使用鲁棒PCA的均值meanX/meanY）
-            double[] projMain = new double[points.Count];  // 主方向投影
-            double[] projPerp = new double[points.Count];  // 垂直方向投影
-            for (int i = 0; i < points.Count; i++)
-            {
-                double localX = points[i].X - meanX;
-                double localY = points[i].Y - meanY;
-                projMain[i] = localX * mainDirX + localY * mainDirY;
-                projPerp[i] = localX * perpDirX + localY * perpDirY;
-            }
+            // 步骤2: 生成外轮廓挤出的立面点云
+            System.Diagnostics.Debug.WriteLine("开始生成立面点云(外轮廓挤出)...");
+            GenerateFacadesByExtrudedHull(points, (float)meanX, (float)meanY, min.Z, max.Z);
 
-            // 步骤4: 在旋转坐标系中计算边界
-            double minMain = projMain.Min();
-            double maxMain = projMain.Max();
-            double minPerp = projPerp.Min();
-            double maxPerp = projPerp.Max();
-            
-            double mainSize = maxMain - minMain;
-            double perpSize = maxPerp - minPerp;
-            
-            // 优化厚度计算：为每个方向使用固定的统一厚度
-            double uniformThickness = Math.Min(mainSize, perpSize) * 0.15; // 统一厚度为较短边的15%
-            
-            // 计算四个立面的精确边界（确保厚度一致）
-            double mainThickness = uniformThickness;  // 主方向（东西面）厚度
-            double perpThickness = uniformThickness;  // 垂直方向（南北面）厚度
-            
-            System.Diagnostics.Debug.WriteLine($"旋转坐标系边界: 主方向[{minMain:F2}, {maxMain:F2}], 垂直方向[{minPerp:F2}, {maxPerp:F2}]");
-            System.Diagnostics.Debug.WriteLine($"主方向尺寸: {mainSize:F2}, 垂直方向尺寸: {perpSize:F2}");
-            System.Diagnostics.Debug.WriteLine($"统一厚度: {uniformThickness:F2}");
-            System.Diagnostics.Debug.WriteLine($"分割策略: 基于到边界距离的内向外识别法");
-            
-            // 步骤5: 在旋转坐标系中进行立面分割
-            int mainPositiveCount = 0, mainNegativeCount = 0, perpPositiveCount = 0, perpNegativeCount = 0;
-            
-            for (int i = 0; i < points.Count; i++)
-            {
-                // 使用预计算的投影坐标
-                double mainProj = projMain[i];
-                double perpProj = projPerp[i];
-                
-                // 在旋转坐标系中进行分割
-                bool assigned = false;
-                
-                // 改进的立面识别算法 - 基于到边界距离的内向外识别
-                // 判断点更靠近哪个方向的边界
-                double mainBoundaryDistance = Math.Min(Math.Abs(mainProj - maxMain), Math.Abs(mainProj - minMain));
-                double perpBoundaryDistance = Math.Min(Math.Abs(perpProj - maxPerp), Math.Abs(perpProj - minPerp));
-                
-                // 基于到边界的距离进行分组（而不是从边界向内）
-                if (mainBoundaryDistance <= mainThickness && mainBoundaryDistance <= perpBoundaryDistance)
-                {
-                    // 更靠近主方向边界 - 分配给主方向正面或负面
-                    if (Math.Abs(mainProj - maxMain) < Math.Abs(mainProj - minMain))
-                    {
-                        // 更靠近主方向最大值 - 主方向正面
-                        facadeStates[FacadeType.MainPositive].PointIndices.Add(i);
-                        mainPositiveCount++;
-                        assigned = true;
-                    }
-                    else
-                    {
-                        // 更靠近主方向最小值 - 主方向负面
-                        facadeStates[FacadeType.MainNegative].PointIndices.Add(i);
-                        mainNegativeCount++;
-                        assigned = true;
-                    }
-                }
-                else if (perpBoundaryDistance <= perpThickness)
-                {
-                    // 更靠近垂直方向边界 - 分配给垂直方向正面或负面
-                    if (Math.Abs(perpProj - maxPerp) < Math.Abs(perpProj - minPerp))
-                    {
-                        // 更靠近垂直方向最大值 - 垂直方向正面
-                        facadeStates[FacadeType.PerpPositive].PointIndices.Add(i);
-                        perpPositiveCount++;
-                        assigned = true;
-                    }
-                    else
-                    {
-                        // 更靠近垂直方向最小值 - 垂直方向负面
-                        facadeStates[FacadeType.PerpNegative].PointIndices.Add(i);
-                        perpNegativeCount++;
-                        assigned = true;
-                    }
-                }
-                
-                // 每处理1万个点输出一次进度
-                if ((i + 1) % 10000 == 0)
-                {
-                    System.Diagnostics.Debug.WriteLine($"立面分析进度: {i + 1}/{points.Count} ({(float)(i + 1) / points.Count * 100:F1}%)");
-                }
-            }
-            
-            int totalAssigned = mainPositiveCount + mainNegativeCount + perpPositiveCount + perpNegativeCount;
-            int unassigned = points.Count - totalAssigned;
-            
-            System.Diagnostics.Debug.WriteLine($"外围立面分割完成:");
-            System.Diagnostics.Debug.WriteLine($"  主方向正面: {mainPositiveCount} 个点 (厚度: {mainThickness:F2})");
-            System.Diagnostics.Debug.WriteLine($"  主方向负面: {mainNegativeCount} 个点 (厚度: {mainThickness:F2})"); 
-            System.Diagnostics.Debug.WriteLine($"  垂直方向正面: {perpPositiveCount} 个点 (厚度: {perpThickness:F2})");
-            System.Diagnostics.Debug.WriteLine($"  垂直方向负面: {perpNegativeCount} 个点 (厚度: {perpThickness:F2})");
-            System.Diagnostics.Debug.WriteLine($"  内部区域: {unassigned} 个点 (未分配)");
-            System.Diagnostics.Debug.WriteLine($"  立面覆盖率: {(float)totalAssigned / points.Count * 100:F1}%");
-            
-            // 厚度均匀性检查
-            int mainDirectionTotal = mainPositiveCount + mainNegativeCount;
-            int perpDirectionTotal = perpPositiveCount + perpNegativeCount;
-            System.Diagnostics.Debug.WriteLine($"厚度均匀性: 主方向总计={mainDirectionTotal}, 垂直方向总计={perpDirectionTotal}");
-
-            // 步骤6: 生成规律的立面点云
-            System.Diagnostics.Debug.WriteLine("开始生成规律立面点云...");
-            GenerateRegularFacades(points, 
-                minX: (float)minMain, maxX: (float)maxMain, 
-                minY: (float)minPerp, maxY: (float)maxPerp,
-                mainDirX: (float)mainDirX, mainDirY: (float)mainDirY,
-                perpDirX: (float)perpDirX, perpDirY: (float)perpDirY,
-                centerX: (float)meanX, centerY: (float)meanY,
-                zMin: min.Z, zMax: max.Z);
-
-            // 步骤7: 计算每个立面的真实方位信息
+            // 步骤3: 计算每个立面的真实方位信息
             System.Diagnostics.Debug.WriteLine("开始计算立面真实方位信息...");
             UpdateFacadeAzimuthInfo();
             
-            // 步骤8: 验证立面一致性
+            // 步骤4: 验证立面一致性
             System.Diagnostics.Debug.WriteLine("验证立面点云一致性...");
             VerifyFacadeConsistency();
 
@@ -381,127 +251,9 @@ namespace LoadPCDtest.Analysis
             lastAnalyzedPointCount = points.Count;
         }
 
-        /// <summary>
-        /// 提取建筑外围点（排除内部结构）- 优化版
-        /// </summary>
-        private List<Vector3> ExtractOuterPerimeter(List<Vector3> points)
-        {
-            // 计算边界
-            float minX = points.Min(p => p.X);
-            float maxX = points.Max(p => p.X);
-            float minY = points.Min(p => p.Y);
-            float maxY = points.Max(p => p.Y);
-            
-            float width = maxX - minX;
-            float height = maxY - minY;
-            
-            // 使用更小的网格以提高性能
-            int gridSize = 20; // 减少到20x20网格
-            float cellWidth = width / gridSize;
-            float cellHeight = height / gridSize;
-            
-            System.Diagnostics.Debug.WriteLine($"网格分析: {gridSize}x{gridSize}, 单元格大小: ({cellWidth:F2}, {cellHeight:F2})");
-            
-            // 创建网格并分配点到网格单元
-            var grid = new Dictionary<(int, int), List<Vector3>>();
-            
-            foreach (var point in points)
-            {
-                int gridX = Math.Min(gridSize - 1, (int)((point.X - minX) / cellWidth));
-                int gridY = Math.Min(gridSize - 1, (int)((point.Y - minY) / cellHeight));
-                
-                if (!grid.ContainsKey((gridX, gridY)))
-                    grid[(gridX, gridY)] = new List<Vector3>();
-                
-                grid[(gridX, gridY)].Add(point);
-            }
-            
-            System.Diagnostics.Debug.WriteLine($"网格填充完成，有效单元: {grid.Count}/{gridSize * gridSize}");
-            
-            // 识别边界网格
-            var boundaryGrids = new HashSet<(int, int)>();
-            
-            foreach (var cell in grid.Keys)
-            {
-                if (IsBoundaryGrid(cell.Item1, cell.Item2, gridSize, grid))
-                {
-                    boundaryGrids.Add(cell);
-                }
-            }
-            
-            System.Diagnostics.Debug.WriteLine($"边界网格识别完成: {boundaryGrids.Count} 个边界单元");
-            
-            // 收集边界网格中的所有点
-            var outerPoints = new List<Vector3>();
-            foreach (var boundaryGrid in boundaryGrids)
-            {
-                if (grid.ContainsKey(boundaryGrid))
-                {
-                    outerPoints.AddRange(grid[boundaryGrid]);
-                }
-            }
-            
-            System.Diagnostics.Debug.WriteLine($"外围点提取完成: {outerPoints.Count} 个外围点");
-            
-            return outerPoints;
-        }
+        
 
-        /// <summary>
-        /// 生成规律的立面点云
-        /// </summary>
-        private void GenerateRegularFacades(List<Vector3> originalPoints,
-            float minX, float maxX, float minY, float maxY,
-            float mainDirX, float mainDirY, float perpDirX, float perpDirY,
-            float centerX, float centerY, float zMin, float zMax)
-        {
-            // 清空之前生成的点
-            generatedFacadePoints.Clear();
-            foreach (var state in facadeStates.Values)
-            {
-                state.GeneratedPoints.Clear();
-            }
-
-            if (generationMode == FacadeGenerationMode.ExtrudedHull)
-            {
-                GenerateFacadesByExtrudedHull(originalPoints, centerX, centerY, zMin, zMax);
-                return;
-            }
-
-            // 旧策略：旋转矩形四面
-            float pointSpacing = 0.8f; // 点间距
-            float zSpacing = 1.3f;     // Z间距
-
-            float mainSize = maxX - minX;
-            float perpSize = maxY - minY;
-            float height = zMax - zMin;
-
-            System.Diagnostics.Debug.WriteLine($"立面生成参数: 点间距={pointSpacing:F2}, Z间距={zSpacing:F2}");
-            System.Diagnostics.Debug.WriteLine($"建筑尺寸: 主方向={mainSize:F2}, 垂直方向={perpSize:F2}, 高度={height:F2}");
-
-            var boundaryPoints = CalculateUnifiedBoundaryPoints(
-                centerX, centerY, minX, maxX, minY, maxY,
-                mainDirX, mainDirY, perpDirX, perpDirY);
-
-            System.Diagnostics.Debug.WriteLine($"立面生成参数验证:");
-            System.Diagnostics.Debug.WriteLine($"  主方向向量: ({mainDirX:F3}, {mainDirY:F3})");
-            System.Diagnostics.Debug.WriteLine($"  垂直方向向量: ({perpDirX:F3}, {perpDirY:F3})");
-            System.Diagnostics.Debug.WriteLine($"  主方向尺寸: {mainSize:F2}, 垂直方向尺寸: {perpSize:F2}");
-            
-            GenerateFacadePlane(FacadeType.MainPositive, boundaryPoints[FacadeType.MainPositive], 
-                perpDirX, perpDirY, perpSize, pointSpacing, zSpacing, zMin, zMax);
-            GenerateFacadePlane(FacadeType.MainNegative, boundaryPoints[FacadeType.MainNegative], 
-                perpDirX, perpDirY, perpSize, pointSpacing, zSpacing, zMin, zMax);
-            GenerateFacadePlane(FacadeType.PerpPositive, boundaryPoints[FacadeType.PerpPositive], 
-                mainDirX, mainDirY, mainSize, pointSpacing, zSpacing, zMin, zMax);
-            GenerateFacadePlane(FacadeType.PerpNegative, boundaryPoints[FacadeType.PerpNegative], 
-                mainDirX, mainDirY, mainSize, pointSpacing, zSpacing, zMin, zMax);
-
-            System.Diagnostics.Debug.WriteLine($"规律立面生成完成:");
-            foreach (var kvp in facadeStates)
-            {
-                System.Diagnostics.Debug.WriteLine($"  {kvp.Value.Name}: {kvp.Value.GeneratedPoints.Count} 个规律点");
-            }
-        }
+        
 
         /// <summary>
         /// 基于XY外轮廓挤出生成立面点云
@@ -512,14 +264,13 @@ namespace LoadPCDtest.Analysis
             var hull2D = ComputeConvexHull2D(originalPoints);
             if (hull2D.Count < 3)
             {
-                System.Diagnostics.Debug.WriteLine("凸包点不足，回退到旧策略");
-                generationMode = FacadeGenerationMode.RotatedBox;
+                System.Diagnostics.Debug.WriteLine("凸包点不足，无法生成挤出立面");
                 return;
             }
 
             // 2) 生成Z层
-            float pointSpacing = 0.8f;
-            float zSpacing = 1.3f;
+            float pointSpacing = 8f;
+            float zSpacing = 4f;
             int zLayers = Math.Max(3, (int)((zMax - zMin) / zSpacing)) + 1;
 
             // 3) 沿凸包边按等距采样并挤出到各Z层
@@ -550,7 +301,7 @@ namespace LoadPCDtest.Analysis
                 }
 
                 // 将该边的点分配到对应立面：根据外法线与主/副方向夹角
-                AssignEdgeSamplesToFacade(a, b, normal, pointSpacing, zMin, zMax);
+                AssignEdgeSamplesToFacade(a, b, normal, pointSpacing, zMin, zMax, zSpacing);
             }
 
             System.Diagnostics.Debug.WriteLine($"凸包挤出生成完成: {generatedFacadePoints.Count} 个点");
@@ -559,12 +310,12 @@ namespace LoadPCDtest.Analysis
         /// <summary>
         /// 将一条凸包边的样本点分配给四个立面之一
         /// </summary>
-        private void AssignEdgeSamplesToFacade(Vector2 a, Vector2 b, Vector2 outwardNormal, float pointSpacing, float zMin, float zMax)
+        private void AssignEdgeSamplesToFacade(Vector2 a, Vector2 b, Vector2 outwardNormal, float pointSpacing, float zMin, float zMax, float zSpacing)
         {
             var edge = b - a;
             float edgeLen = edge.Length;
             int samples = Math.Max(2, (int)(edgeLen / pointSpacing)) + 1;
-            int zLayers = Math.Max(3, (int)((zMax - zMin) / 1.3f)) + 1; // 与上方一致
+            int zLayers = Math.Max(3, (int)((zMax - zMin) / zSpacing)) + 1; // 使用传入的 zSpacing
 
             // 选择立面：取与 outwardNormal 夹角最小的方向（Main± 或 Perp±）
             FacadeType target;
@@ -642,137 +393,13 @@ namespace LoadPCDtest.Analysis
             return (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
         }
 
-        /// <summary>
-        /// 计算统一的边界点，确保四个立面形成完整的矩形
-        /// </summary>
-        private Dictionary<FacadeType, Vector3> CalculateUnifiedBoundaryPoints(
-            float centerX, float centerY, float minX, float maxX, float minY, float maxY,
-            float mainDirX, float mainDirY, float perpDirX, float perpDirY)
-        {
-            var boundaryPoints = new Dictionary<FacadeType, Vector3>();
-
-            // 重新设计：计算矩形的四个角点，然后确定每个立面的起点
-            // 矩形四个角点（按逆时针顺序）
-            Vector3 corner1 = new Vector3(  // minMain, minPerp
-                centerX + mainDirX * minX + perpDirX * minY,
-                centerY + mainDirY * minX + perpDirY * minY, 0);
-            Vector3 corner2 = new Vector3(  // maxMain, minPerp  
-                centerX + mainDirX * maxX + perpDirX * minY,
-                centerY + mainDirY * maxX + perpDirY * minY, 0);
-            Vector3 corner3 = new Vector3(  // maxMain, maxPerp
-                centerX + mainDirX * maxX + perpDirX * maxY,
-                centerY + mainDirY * maxX + perpDirY * maxY, 0);
-            Vector3 corner4 = new Vector3(  // minMain, maxPerp
-                centerX + mainDirX * minX + perpDirX * maxY,
-                centerY + mainDirY * minX + perpDirY * maxY, 0);
-            
-            // 立面起点分配：每个立面从对应的边界线的一个端点开始
-            boundaryPoints[FacadeType.MainPositive] = corner2;    // 主方向正面：从角点2开始，沿垂直方向到角点3
-            boundaryPoints[FacadeType.MainNegative] = corner1;    // 主方向负面：从角点1开始，沿垂直方向到角点4  
-            boundaryPoints[FacadeType.PerpPositive] = corner4;    // 垂直方向正面：从角点4开始，沿主方向到角点3（反向）
-            boundaryPoints[FacadeType.PerpNegative] = corner1;    // 垂直方向负面：从角点1开始，沿主方向到角点2
-            
-            System.Diagnostics.Debug.WriteLine($"矩形角点计算:");
-            System.Diagnostics.Debug.WriteLine($"  角点1 (minMain,minPerp): ({corner1.X:F2}, {corner1.Y:F2})");
-            System.Diagnostics.Debug.WriteLine($"  角点2 (maxMain,minPerp): ({corner2.X:F2}, {corner2.Y:F2})"); 
-            System.Diagnostics.Debug.WriteLine($"  角点3 (maxMain,maxPerp): ({corner3.X:F2}, {corner3.Y:F2})");
-            System.Diagnostics.Debug.WriteLine($"  角点4 (minMain,maxPerp): ({corner4.X:F2}, {corner4.Y:F2})");
-
-            // 输出调试信息
-            System.Diagnostics.Debug.WriteLine($"统一边界点计算完成:");
-            System.Diagnostics.Debug.WriteLine($"  中心点: ({centerX:F2}, {centerY:F2})");
-            System.Diagnostics.Debug.WriteLine($"  主方向向量: ({mainDirX:F3}, {mainDirY:F3})");
-            System.Diagnostics.Debug.WriteLine($"  垂直方向向量: ({perpDirX:F3}, {perpDirY:F3})");
-            System.Diagnostics.Debug.WriteLine($"  投影范围: 主方向[{minX:F2}, {maxX:F2}], 垂直方向[{minY:F2}, {maxY:F2}]");
-
-            System.Diagnostics.Debug.WriteLine($"立面起点位置:");
-            System.Diagnostics.Debug.WriteLine($"  主方向正面: ({boundaryPoints[FacadeType.MainPositive].X:F2}, {boundaryPoints[FacadeType.MainPositive].Y:F2})");
-            System.Diagnostics.Debug.WriteLine($"  主方向负面: ({boundaryPoints[FacadeType.MainNegative].X:F2}, {boundaryPoints[FacadeType.MainNegative].Y:F2})");
-            System.Diagnostics.Debug.WriteLine($"  垂直方向正面: ({boundaryPoints[FacadeType.PerpPositive].X:F2}, {boundaryPoints[FacadeType.PerpPositive].Y:F2})");
-            System.Diagnostics.Debug.WriteLine($"  垂直方向负面: ({boundaryPoints[FacadeType.PerpNegative].X:F2}, {boundaryPoints[FacadeType.PerpNegative].Y:F2})");
-
-            return boundaryPoints;
-        }
+        
 
 
 
-        /// <summary>
-        /// 为单个立面生成规律点云
-        /// </summary>
-        private void GenerateFacadePlane(FacadeType facadeType, Vector3 extremePoint,
-            float dirX, float dirY, float facadeLength, 
-            float pointSpacing, float zSpacing, float zMin, float zMax)
-        {
-            var facadePoints = new List<Vector3>();
+        
 
-            // 计算沿立面的点数和Z方向的层数
-            int pointsAlongFacade = Math.Max(3, (int)(facadeLength / pointSpacing)) + 1;
-            int zLayers = Math.Max(3, (int)((zMax - zMin) / zSpacing)) + 1;
-
-            // 沿立面方向生成点 - 从起点开始，而不是从中心
-            for (int i = 0; i < pointsAlongFacade; i++)
-            {
-                // 从立面起点开始，沿方向延伸
-                float t = (float)i / (pointsAlongFacade - 1);
-                float offsetDistance = t * facadeLength; // 从0到全长，不缩短
-
-                float offsetX = dirX * offsetDistance;
-                float offsetY = dirY * offsetDistance;
-
-                // 沿Z方向生成点
-                for (int j = 0; j < zLayers; j++)
-                {
-                    float z = zMin + (zMax - zMin) * j / (zLayers - 1);
-
-                    var newPoint = new Vector3(
-                        extremePoint.X + offsetX,
-                        extremePoint.Y + offsetY,
-                        z
-                    );
-
-                    facadePoints.Add(newPoint);
-                }
-            }
-
-            // 存储到对应的立面状态
-            facadeStates[facadeType].GeneratedPoints = facadePoints;
-            
-            // 同时添加到总的生成点列表中
-            generatedFacadePoints.AddRange(facadePoints);
-
-            System.Diagnostics.Debug.WriteLine($"{facadeStates[facadeType].Name}生成: {pointsAlongFacade}x{zLayers} = {facadePoints.Count} 个点");
-        }
-
-        /// <summary>
-        /// 判断网格是否为边界网格
-        /// </summary>
-        private bool IsBoundaryGrid(int x, int y, int gridSize, Dictionary<(int, int), List<Vector3>> grid)
-        {
-            // 如果在整体网格的边缘，肯定是边界
-            if (x == 0 || x == gridSize - 1 || y == 0 || y == gridSize - 1)
-                return true;
-            
-            // 检查8个邻居
-            int emptyNeighbors = 0;
-            for (int dx = -1; dx <= 1; dx++)
-            {
-                for (int dy = -1; dy <= 1; dy++)
-                {
-                    if (dx == 0 && dy == 0) continue; // 跳过自己
-                    
-                    int nx = x + dx;
-                    int ny = y + dy;
-                    
-                    if (nx < 0 || nx >= gridSize || ny < 0 || ny >= gridSize || !grid.ContainsKey((nx, ny)))
-                    {
-                        emptyNeighbors++;
-                    }
-                }
-            }
-            
-            // 如果有2个或更多空邻居，认为是边界
-            return emptyNeighbors >= 2;
-        }
+        
 
         /// <summary>
         /// 切换立面显示状态
@@ -834,23 +461,7 @@ namespace LoadPCDtest.Analysis
             return true; // 不属于任何立面的点默认显示
         }
 
-        /// <summary>
-        /// 获取所有生成的立面点云（用于替换原始点云）
-        /// </summary>
-        public List<Vector3> GetGeneratedFacadePoints()
-        {
-            if (!isInitialized) return new List<Vector3>();
-            
-            var visiblePoints = new List<Vector3>();
-            foreach (var kvp in facadeStates)
-            {
-                if (kvp.Value.IsVisible)
-                {
-                    visiblePoints.AddRange(kvp.Value.GeneratedPoints);
-                }
-            }
-            return visiblePoints;
-        }
+        
 
         /// <summary>
         /// 获取特定立面的生成点云
@@ -864,28 +475,7 @@ namespace LoadPCDtest.Analysis
             return new List<Vector3>();
         }
 
-        /// <summary>
-        /// 渲染生成的立面点云（新的渲染方法）
-        /// </summary>
-        public void RenderGeneratedFacades()
-        {
-            if (!isInitialized) return;
-
-            foreach (var kvp in facadeStates)
-            {
-                if (kvp.Value.IsVisible && kvp.Value.GeneratedPoints.Count > 0)
-                {
-                    // 设置立面颜色
-                    OpenTK.Graphics.OpenGL.GL.Color3(kvp.Value.Color.X, kvp.Value.Color.Y, kvp.Value.Color.Z);
-                    
-                    // 渲染该立面的所有生成点
-                    foreach (var point in kvp.Value.GeneratedPoints)
-                    {
-                        OpenTK.Graphics.OpenGL.GL.Vertex3(point.X, point.Y, point.Z);
-                    }
-                }
-            }
-        }
+        
 
         /// <summary>
         /// 获取当前显示状态摘要
@@ -990,22 +580,89 @@ namespace LoadPCDtest.Analysis
             System.Diagnostics.Debug.WriteLine($"  建筑垂直方向: {perpAzimuth:F1}° ({GetCompassDirection(perpAzimuth)})");
         }
 
+        
+
         /// <summary>
-        /// 获取建筑真实方位角
+        /// 将指定立面的点按“从上到下的蛇形”排序
         /// </summary>
-        /// <returns>建筑主方向的真实方位角（度）</returns>
-        public float GetBuildingAzimuth()
+        private List<Vector3> GetSnakeOrderedPoints(FacadeType facade, float layerMergeEpsilon)
         {
-            return buildingAzimuth;
+            var pts = GetFacadePoints(facade);
+            if (pts == null || pts.Count == 0) return new List<Vector3>();
+
+            // 1) 以 Z 从高到低分层（允许 layerMergeEpsilon 合并近似层）
+            var layers = new List<List<Vector3>>();
+            var sorted = pts.OrderByDescending(p => p.Z).ToList();
+            foreach (var p in sorted)
+            {
+                if (layers.Count == 0)
+                {
+                    layers.Add(new List<Vector3> { p });
+                    continue;
+                }
+                var currentLayer = layers[layers.Count - 1];
+                if (System.Math.Abs(currentLayer[0].Z - p.Z) <= layerMergeEpsilon)
+                {
+                    currentLayer.Add(p);
+                }
+                else
+                {
+                    layers.Add(new List<Vector3> { p });
+                }
+            }
+
+            // 2) 每层按世界坐标 X 从左到右排序，并奇偶层交替反转形成蛇形
+            var result = new List<Vector3>(pts.Count);
+            for (int i = 0; i < layers.Count; i++)
+            {
+                var layer = layers[i];
+                var ordered = layer.OrderBy(p => p.X).ToList();
+                if (i % 2 == 1) ordered.Reverse();
+                result.AddRange(ordered);
+            }
+            return result;
         }
 
         /// <summary>
-        /// 获取建筑朝向描述
+        /// 导出所有立面为 QGC WPL 110 航点文件（每个立面一个文件）
+        /// 注意：此处使用 X->lat, Y->lon, Z->alt 的坐标映射。
         /// </summary>
-        /// <returns>建筑主方向的指南针方向</returns>
-        public string GetBuildingOrientation()
+        public void ExportFacadesToQgc(string baseFilePathWithoutExt, float layerMergeEpsilon = 0.6f)
         {
-            return isInitialized ? GetCompassDirection(buildingAzimuth) : "未分析";
+            if (!isInitialized)
+            {
+                System.Diagnostics.Debug.WriteLine("立面未分析，无法导出航点");
+                return;
+            }
+
+            foreach (var kv in facadeStates)
+            {
+                var facade = kv.Key;
+                var name = kv.Value.Name + DateTime.Now.ToString("hhmmss");
+                var ordered = GetSnakeOrderedPoints(facade, layerMergeEpsilon);
+                if (ordered.Count == 0) continue;
+
+                var path = baseFilePathWithoutExt + "_" + name + ".waypoints";
+                using (var sw = new StreamWriter(path, false))
+                {
+                    sw.WriteLine("QGC WPL 110");
+                    for (int i = 0; i < ordered.Count; i++)
+                    {
+                        var p = ordered[i];
+                        int seq = i;
+                        int current = (i == 0) ? 1 : 0;
+                        int frame = 0;     // MAV_FRAME_GLOBAL（按需调整）
+                        int command = 16;  // NAV_WAYPOINT
+                        double p1 = 0, p2 = 0, p3 = 0, p4 = 0; // 预留参数
+                        double lat = p.X;
+                        double lon = p.Z;
+                        double alt = p.Z;
+                        int autocontinue = 1;
+                        sw.WriteLine($"{seq}\t{current}\t{frame}\t{command}\t{p1:F8}\t{p2:F8}\t{p3:F8}\t{p4:F8}\t{lat:F8}\t{lon:F8}\t{alt:F6}\t{autocontinue}");
+                    }
+                }
+                System.Diagnostics.Debug.WriteLine($"已导出航点: {path} ({ordered.Count} 个)");
+            }
         }
 
         /// <summary>

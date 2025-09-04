@@ -168,7 +168,6 @@ namespace LoadPCDtest.Rendering
             float zRange = maxZ - minZ;
             if (zRange < 1e-6f) zRange = 1.0f;
             
-            int pointCount = 0;
             foreach (var p in points)
             {
                 float normalizedZ = (p.Z - minZ) / zRange;
@@ -191,18 +190,20 @@ namespace LoadPCDtest.Rendering
                 
                 GL.Color3(r, g, b);
                 GL.Vertex3(p.X, p.Y, p.Z);
-                pointCount++;
             }
         }
 
         /// <summary>
-        /// 使用立面分析颜色渲染（规律立面模式 - 仅渲染生成的立面）
+        /// 使用立面分析颜色渲染（规律立面模式 - 可以渲染原始点云）
         /// </summary>
         private void RenderWithFacadeColors(PointCloudData data)
         {
-            // 在规律立面模式下，不渲染原始点云，只通过独立的生成立面渲染系统渲染
+            // 在规律立面模式下，仍然可以渲染原始点云，使用高度着色
             // 这样可以让原始点云和生成立面独立控制显示
             System.Diagnostics.Debug.WriteLine("规律立面模式: 原始点云通过独立系统控制");
+            
+            // 使用高度着色渲染原始点云
+            RenderWithHeightColors(data.Points);
         }
 
         /// <summary>

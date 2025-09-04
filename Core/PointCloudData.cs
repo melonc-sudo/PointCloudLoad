@@ -14,7 +14,6 @@ namespace LoadPCDtest.Core
         public List<PLYLoader.PLYPoint> PLYPoints { get; set; } = new List<PLYLoader.PLYPoint>();
         public bool HasColors { get; set; } = false;
         public Vector3 Center { get; set; } = Vector3.Zero;
-        public Vector3 BoundingBoxSize { get; set; } = Vector3.One;
         public float ObjectScale { get; set; } = 1.0f;
         public string CurrentFilePath { get; set; } = "";
 
@@ -31,7 +30,6 @@ namespace LoadPCDtest.Core
             PLYPoints.Clear();
             HasColors = false;
             Center = Vector3.Zero;
-            BoundingBoxSize = Vector3.One;
             ObjectScale = 1.0f;
             CurrentFilePath = "";
         }

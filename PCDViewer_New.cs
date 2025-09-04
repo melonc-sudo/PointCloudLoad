@@ -3,6 +3,7 @@ using OpenTK.Graphics.OpenGL;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using System.IO;
 using LoadPCDtest.Core;
 using LoadPCDtest.Rendering;
 using LoadPCDtest.IO;
@@ -374,7 +375,16 @@ namespace LoadPCDtest
                     break;
                 case Keys.P:
                     // P键：切换点云显示
+                    if (!renderer.ShowPoints)
+                    {
+                        // 要显示原始点云时，确保颜色模式不是Facade（因为Facade模式不渲染原始点云）
+                        if (renderer.ColorManager.CurrentColorMode == Rendering.ColorMode.Facade)
+                        {
+                            renderer.ColorManager.CurrentColorMode = pointCloudData.HasColors ? Rendering.ColorMode.OriginalRGB : Rendering.ColorMode.HeightBased;
+                        }
+                    }
                     renderer.TogglePoints();
+                    UpdateTitle();
                     gl.Invalidate();
                     break;
                 case Keys.Z:
@@ -412,14 +422,7 @@ namespace LoadPCDtest
                     // F4：切换垂直方向负面显示/隐藏
                     ToggleFacade(Analysis.FacadeManager.FacadeType.PerpNegative);
                     break;
-                case Keys.F5:
-                    // F5：显示所有立面
-                    ShowAllFacades();
-                    break;
-                case Keys.F6:
-                    // F6：切换立面模式（规律立面 ↔ 原始立面）
-                    ToggleFacadeMode();
-                    break;
+                
                 case Keys.G:
                     // G：切换生成立面显示/隐藏
                     ToggleGeneratedFacades();
@@ -499,23 +502,6 @@ namespace LoadPCDtest
             camera.ResetToDefault();
             
             gl.Invalidate();
-        }
-
-        /// <summary>
-        /// 确保点云可见 - 调整相机和缩放参数
-        /// </summary>
-        private void EnsurePointCloudVisible()
-        {
-            if (pointCloudData.Points == null || pointCloudData.Points.Count == 0) return;
-
-            // 简化：使用原版本的固定值
-            camera.Distance = 10f;
-            renderer.PointSize = 2.0f;
-            camera.Pan = new OpenTK.Vector2(0, 0);
-            camera.PointCloudYaw = 0f;
-            camera.PointCloudPitch = 0f;
-
-
         }
 
         /// <summary>
@@ -620,13 +606,16 @@ namespace LoadPCDtest
                 return;
             }
 
-            // 切换到立面分析模式
+            // 切换到立面分析模式，但不影响原始点云显示状态
             if (renderer.ColorManager.CurrentColorMode != Rendering.ColorMode.Facade)
             {
                 System.Diagnostics.Debug.WriteLine("切换到立面分析模式");
                 renderer.ColorManager.CurrentColorMode = Rendering.ColorMode.Facade;
-                
-                // 首次切换时执行立面分析
+            }
+
+            // 若尚未生成，则进行一次分析；仅控制生成立面自身的显示
+            if (!renderer.ColorManager.FacadeManager.IsInitialized)
+            {
                 System.Diagnostics.Debug.WriteLine("开始立面分析...");
                 renderer.ColorManager.FacadeManager.AnalyzeFacades(pointCloudData.Points);
                 System.Diagnostics.Debug.WriteLine("立面分析完成");
@@ -856,50 +845,12 @@ namespace LoadPCDtest
                 
                 Text = $"点云查看器 - {fileName} ({pointCloudData.Points.Count:N0} 个点) - " +
                        $"缩放:{camera.GlobalScale:F1}x 点大小:{renderer.PointSize:F1} - " +
-                       $"{mappingName} - {colorMode}{facadeInfo}{generatedFacadeInfo} [P:原始点云 G:生成立面 F1:主正面 F2:主负面 F3:垂直正面 F4:垂直负面]";
+                       $"{mappingName} - {colorMode}{facadeInfo}{generatedFacadeInfo} [P:原始点云 G:生成立面/导出 F1:主正面 F2:主负面 F3:垂直正面 F4:垂直负面]";
             }
             else
             {
                 Text = "点云查看器 - 简化版";
             }
-        }
-
-        /// <summary>
-        /// 切换立面模式（规律立面 ↔ 原始立面）
-        /// </summary>
-        private void ToggleFacadeMode()
-        {
-            if (pointCloudData?.Points == null || pointCloudData.Points.Count == 0)
-            {
-                System.Diagnostics.Debug.WriteLine("错误: 没有点云数据可供立面分析");
-                return;
-            }
-
-            // 确保立面已分析
-            System.Diagnostics.Debug.WriteLine("开始立面分析...");
-            renderer.ColorManager.FacadeManager.AnalyzeFacades(pointCloudData.Points);
-            System.Diagnostics.Debug.WriteLine("立面分析完成");
-
-            // 在两种立面模式之间切换
-            if (renderer.ColorManager.CurrentColorMode == Rendering.ColorMode.Facade)
-            {
-                renderer.ColorManager.CurrentColorMode = Rendering.ColorMode.OriginalFacade;
-                System.Diagnostics.Debug.WriteLine("切换到原始立面模式");
-            }
-            else if (renderer.ColorManager.CurrentColorMode == Rendering.ColorMode.OriginalFacade)
-            {
-                renderer.ColorManager.CurrentColorMode = Rendering.ColorMode.Facade;
-                System.Diagnostics.Debug.WriteLine("切换到规律立面模式");
-            }
-            else
-            {
-                // 如果当前不在立面模式，则切换到规律立面模式
-                renderer.ColorManager.CurrentColorMode = Rendering.ColorMode.Facade;
-                System.Diagnostics.Debug.WriteLine("切换到规律立面模式");
-            }
-
-            UpdateTitle();
-            gl.Invalidate();
         }
 
         /// <summary>
@@ -919,9 +870,22 @@ namespace LoadPCDtest
                 System.Diagnostics.Debug.WriteLine("开始立面分析和生成...");
                 renderer.ColorManager.FacadeManager.AnalyzeFacades(pointCloudData.Points);
                 System.Diagnostics.Debug.WriteLine("立面分析和生成完成");
+
+                // 立面生成后，直接导出到程序所在目录
+                try
+                {
+                    string baseDir = AppDomain.CurrentDomain.BaseDirectory?.TrimEnd('\\', '/');
+                    string basePath = Path.Combine(baseDir ?? ".", "facades");
+                    renderer.ColorManager.FacadeManager.ExportFacadesToQgc(basePath, 0.6f);
+                    System.Diagnostics.Debug.WriteLine($"航点导出完成，目录: {baseDir}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"导出航点失败: {ex.Message}");
+                }
             }
 
-            // 切换生成立面显示
+            // 切换生成立面显示（不影响原始点云 ShowPoints）
             renderer.ToggleGeneratedFacades();
             UpdateTitle();
             gl.Invalidate();

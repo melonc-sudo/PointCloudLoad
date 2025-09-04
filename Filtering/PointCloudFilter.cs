@@ -79,50 +79,7 @@ namespace LoadPCDtest.Filtering
 
         }
 
-        /// <summary>
-        /// 确保过滤后的点云可见且大小合适
-        /// </summary>
-        private static void EnsurePointCloudVisible(PointCloudData data, float distance)
-        {
-            if (data.Points == null || data.Points.Count == 0)
-                return;
-                
-            // 计算过滤后点云的包围盒
-            var minX = data.Points.Min(p => p.X);
-            var maxX = data.Points.Max(p => p.X);
-            var minY = data.Points.Min(p => p.Y);
-            var maxY = data.Points.Max(p => p.Y);
-            var minZ = data.Points.Min(p => p.Z);
-            var maxZ = data.Points.Max(p => p.Z);
-            
-            var filteredSize = new Vector3(maxX - minX, maxY - minY, maxZ - minZ);
-            var maxDimension = Math.Max(Math.Max(filteredSize.X, filteredSize.Y), filteredSize.Z);
-            
-            // 保存当前的objectScale用于比较
-            float originalObjectScale = data.ObjectScale;
-            
-            // 重新计算合适的objectScale，但要保持合理的拖动灵敏度
-            float targetScreenSize = 5.0f;
-            float newObjectScale = targetScreenSize / Math.Max(maxDimension, 0.1f);
-            
-            // 如果新的缩放过大（会导致拖动过于敏感），则限制它
-            float maxReasonableScale = originalObjectScale * 10.0f; // 最多放大10倍
-            if (newObjectScale > maxReasonableScale && originalObjectScale > 0)
-            {
-                data.ObjectScale = maxReasonableScale;
-                System.Diagnostics.Debug.WriteLine($"限制objectScale从 {newObjectScale:F6} 到 {data.ObjectScale:F6} 以保持合理的拖动灵敏度");
-            }
-            else
-            {
-                data.ObjectScale = newObjectScale;
-            }
-            
-            System.Diagnostics.Debug.WriteLine($"调整显示参数:");
-            System.Diagnostics.Debug.WriteLine($"  过滤后包围盒: {filteredSize.X:F2} x {filteredSize.Y:F2} x {filteredSize.Z:F2}");
-            System.Diagnostics.Debug.WriteLine($"  最大维度: {maxDimension:F2}");
-            System.Diagnostics.Debug.WriteLine($"  原始缩放: {originalObjectScale:F6}");
-            System.Diagnostics.Debug.WriteLine($"  最终缩放: {data.ObjectScale:F6}");
-        }
+        
 
         /// <summary>
         /// 保存过滤后的点云数据到文件

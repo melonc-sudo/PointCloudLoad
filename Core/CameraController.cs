@@ -9,8 +9,7 @@ namespace LoadPCDtest.Core
     public class CameraController
     {
         // 相机参数
-        public float Yaw { get; set; } = 0f;
-        public float Pitch { get; set; } = 0f;
+        
         public float Distance { get; set; } = 10f;
         public Vector2 Pan { get; set; } = Vector2.Zero;
         
@@ -30,8 +29,7 @@ namespace LoadPCDtest.Core
         /// </summary>
         public void ResetToDefault()
         {
-            Yaw = 0f;
-            Pitch = 0f;      // 原版本使用0度，不是-20度
+            
             PointCloudYaw = 0f;
             PointCloudPitch = 0f;
             Pan = Vector2.Zero;
@@ -43,8 +41,7 @@ namespace LoadPCDtest.Core
         /// </summary>
         public void ResetForFilteredData()
         {
-            Yaw = 0f;
-            Pitch = -20f;
+            
             PointCloudYaw = 0f;
             PointCloudPitch = 0f;
             Pan = Vector2.Zero;
