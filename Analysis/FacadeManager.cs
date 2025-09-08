@@ -17,10 +17,10 @@ namespace LoadPCDtest.Analysis
         /// </summary>
         public enum FacadeType
         {
-        MainPositive,   // 主方向正面 (建筑主轴正方向)
-        MainNegative,   // 主方向负面 (建筑主轴负方向)
-        PerpPositive,   // 垂直方向正面 (建筑副轴正方向)
-        PerpNegative    // 垂直方向负面 (建筑副轴负方向)
+            MainPositive,   // 主方向正面 (建筑主轴正方向)
+            MainNegative,   // 主方向负面 (建筑主轴负方向)
+            PerpPositive,   // 垂直方向正面 (建筑副轴正方向)
+            PerpNegative    // 垂直方向负面 (建筑副轴负方向)
         }
 
         /// <summary>
@@ -251,10 +251,6 @@ namespace LoadPCDtest.Analysis
             lastAnalyzedPointCount = points.Count;
         }
 
-        
-
-        
-
         /// <summary>
         /// 基于XY外轮廓挤出生成立面点云
         /// </summary>
@@ -392,15 +388,6 @@ namespace LoadPCDtest.Analysis
         {
             return (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
         }
-
-        
-
-
-
-        
-
-        
-
         /// <summary>
         /// 切换立面显示状态
         /// </summary>

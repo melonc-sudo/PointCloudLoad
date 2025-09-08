@@ -9,6 +9,7 @@ using LoadPCDtest.Rendering;
 using LoadPCDtest.IO;
 using LoadPCDtest.Filtering;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LoadPCDtest
 {
@@ -427,6 +428,12 @@ namespace LoadPCDtest
                     // G：切换生成立面显示/隐藏
                     ToggleGeneratedFacades();
                     break;
+                case Keys.H:
+                    // H：切换检测墙面显示/隐藏
+                    renderer.ToggleDetectedWalls();
+                    UpdateTitle();
+                    gl.Invalidate();
+                    break;
             }
         }
 
@@ -763,6 +770,14 @@ namespace LoadPCDtest
                     return;
                 }
 
+                // 弹出墙面检测参数设置
+                Analysis.WallDetectionSettings.Values wallCfg;
+                if (!Analysis.WallDetectionSettings.TryGetValues(this, out wallCfg))
+                {
+                    System.Diagnostics.Debug.WriteLine("取消墙面检测参数设置");
+                    return;
+                }
+
                 System.Diagnostics.Debug.WriteLine("启动范围选择窗口");
                 
                 using (var rangeWindow = new RangeSelectionWindow(pointCloudData.OriginalPoints))
@@ -810,6 +825,77 @@ namespace LoadPCDtest
                 
                 // 保存过滤后的数据
                 PointCloudFilter.SaveFilteredPointCloud(filteredPoints, pointCloudData.CurrentFilePath);
+
+                // 生成并设置检测墙面点（内存中），并默认显示开关保持现状
+                try
+                {
+                    float zMin = filteredPoints.Min(p => p.Z);
+                    float zMax = filteredPoints.Max(p => p.Z);
+
+                    // 使用最新设置
+                    float width = Analysis.WallDetectionSettings.Defaults.InitialWidthMeters;
+                    float step = Analysis.WallDetectionSettings.Defaults.StepMeters;
+                    int minBaseline = Analysis.WallDetectionSettings.Defaults.MinBaselinePoints;
+                    bool afterDrop = Analysis.WallDetectionSettings.Defaults.ChooseAfterDrop;
+                    float bias = Analysis.WallDetectionSettings.Defaults.OutwardBiasMeters;
+                    float ratioTh = Analysis.WallDetectionSettings.Defaults.UseRatioThreshold ? (Analysis.WallDetectionSettings.Defaults.RatioThresholdPercent / 100f) : -1f;
+
+                    var faces = Analysis.WallRefinement.DetectFacesByEdgeSweep(
+                        filteredPoints,
+                        worldPolygon,
+                        initialWidthMeters: width,
+                        stepMeters: step,
+                        minBaselinePoints: minBaseline,
+                        chooseAfterDrop: afterDrop,
+                        outwardBiasMeters: bias,
+                        ratioThreshold: ratioTh);
+
+                    renderer.DetectedWallPoints = Analysis.WallRefinement.GenerateWallPoints(
+                        faces, zMin, zMax, alongSpacing: 0.3f, zSpacing: 0.5f);
+
+                    // 首次输出选定拐点的占比
+                    if (!Analysis.WallRefinement.HasReportedOnce && Analysis.WallRefinement.LastSelectedRatio >= 0f)
+                    {
+                        Analysis.WallRefinement.HasReportedOnce = true;
+                        MessageBox.Show($"选定墙面拐点占比: {(Analysis.WallRefinement.LastSelectedRatio * 100f):F1}%", "墙面检测", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+
+                    System.Diagnostics.Debug.WriteLine($"检测墙面点: {renderer.DetectedWallPoints.Count} 个");
+                }
+                catch (System.Exception exWalls)
+                {
+                    System.Diagnostics.Debug.WriteLine($"生成检测墙面点失败: {exWalls.Message}");
+                }
+
+                // 对多边形边执行内缩扫描，检测墙面线，并导出为PLY以便查看
+                try
+                {
+                    float zMin = filteredPoints.Min(p => p.Z);
+                    float zMax = filteredPoints.Max(p => p.Z);
+
+                    var faces = Analysis.WallRefinement.DetectFacesByEdgeSweep(
+                        filteredPoints,
+                        worldPolygon,
+                        initialWidthMeters: 5.0f,
+                        stepMeters: 0.10f,
+                        minBaselinePoints: 50);
+
+                    if (faces != null && faces.Count > 0)
+                    {
+                        string dir = System.IO.Path.GetDirectoryName(pointCloudData.CurrentFilePath) ?? ".";
+                        string outPath = System.IO.Path.Combine(dir, $"detected_walls_{DateTime.Now:yyyyMMdd_HHmmss}.ply");
+                        Analysis.WallRefinement.ExportFacesAsPly(faces, outPath, zMin, zMax, alongSpacing: 0.3f, zSpacing: 0.5f);
+                        System.Diagnostics.Debug.WriteLine($"墙面检测完成: {faces.Count} 条，已导出: {outPath}");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("墙面检测结果为空（点数不足或边界不稳定）");
+                    }
+                }
+                catch (System.Exception exFaces)
+                {
+                    System.Diagnostics.Debug.WriteLine($"墙面检测失败: {exFaces.Message}");
+                }
                 
                 UpdateTitle();
                 gl.Invalidate();

@@ -23,9 +23,11 @@ namespace LoadPCDtest.Rendering
         public bool ShowTrackball { get; set; } = false;
         public bool ShowBoundingBox { get; set; } = false;
         public bool ShowGeneratedFacades { get; set; } = false; // 控制生成立面的显示
+        public bool ShowDetectedWalls { get; set; } = false;    // 控制检测墙面点显示
         
         // 当前网格
         public SurfaceReconstruction.Mesh CurrentMesh { get; set; } = null;
+        public List<Vector3> DetectedWallPoints { get; set; } = new List<Vector3>();
         
         // 颜色管理器访问器
         public ColorManager ColorManager => colorManager;
@@ -147,6 +149,13 @@ namespace LoadPCDtest.Rendering
             {
                 GL.PointSize(PointSize);
                 RenderGeneratedFacades();
+            }
+
+            // 绘制检测的墙面点云
+            if (ShowDetectedWalls && DetectedWallPoints != null && DetectedWallPoints.Count > 0)
+            {
+                GL.PointSize(PointSize);
+                RenderDetectedWalls();
             }
         }
 
@@ -272,6 +281,15 @@ namespace LoadPCDtest.Rendering
         }
 
         /// <summary>
+        /// 切换检测墙面显示
+        /// </summary>
+        public void ToggleDetectedWalls()
+        {
+            ShowDetectedWalls = !ShowDetectedWalls;
+            System.Diagnostics.Debug.WriteLine($"检测墙面显示: {(ShowDetectedWalls ? "开启" : "关闭")}");
+        }
+
+        /// <summary>
         /// 渲染生成的立面点云
         /// </summary>
         private void RenderGeneratedFacades()
@@ -297,6 +315,21 @@ namespace LoadPCDtest.Rendering
                 }
             }
             
+            GL.End();
+        }
+
+        /// <summary>
+        /// 渲染检测到的墙面点
+        /// </summary>
+        private void RenderDetectedWalls()
+        {
+            GL.Begin(PrimitiveType.Points);
+            // 采用青色显示
+            GL.Color3(0.0f, 1.0f, 1.0f);
+            foreach (var p in DetectedWallPoints)
+            {
+                GL.Vertex3(p.X, p.Y, p.Z);
+            }
             GL.End();
         }
 
