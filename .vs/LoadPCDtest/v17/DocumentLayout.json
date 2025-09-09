@@ -7,20 +7,20 @@
       "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:pointcloudload\\analysis\\wallrefinement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|d:\\project\\code\\loadpcdtest\\pointcloudload\\rendering\\pointcloudrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:rendering\\pointcloudrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\pcdviewer_new.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:pcdviewer_new.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\analysis\\facademanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:analysis\\facademanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\analysis\\walldetectionsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:analysis\\walldetectionsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\rendering\\pointcloudrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:rendering\\pointcloudrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\analysis\\facademanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|solutionrelative:analysis\\facademanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{32E08B98-CA0B-4165-AAC8-FACE511D5AA0}|LoadPCDtest.csproj|D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\rangeselectionwindow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -62,13 +62,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "PointCloudRenderer.cs",
               "DocumentMoniker": "D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\Rendering\\PointCloudRenderer.cs",
               "RelativeDocumentMoniker": "Rendering\\PointCloudRenderer.cs",
               "ToolTip": "D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\Rendering\\PointCloudRenderer.cs",
               "RelativeToolTip": "Rendering\\PointCloudRenderer.cs",
-              "ViewState": "AQIAABQBAAAAAAAAAAAcwBEAAAA4AAAA",
+              "ViewState": "AQIAAIMAAAAAAAAAAAAtwJ0AAAAjAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-08T02:59:54.554Z",
               "EditorCaption": ""
@@ -81,34 +81,36 @@
               "RelativeDocumentMoniker": "PointCloudLoad\\Analysis\\WallRefinement.cs",
               "ToolTip": "D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\PointCloudLoad\\Analysis\\WallRefinement.cs",
               "RelativeToolTip": "PointCloudLoad\\Analysis\\WallRefinement.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAABUAAAAoAAAA",
+              "ViewState": "AQIAACYAAAAAAAAAAAAAADEAAAAZAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-05T02:33:02.017Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "FacadeManager.cs",
               "DocumentMoniker": "D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\Analysis\\FacadeManager.cs",
               "RelativeDocumentMoniker": "Analysis\\FacadeManager.cs",
               "ToolTip": "D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\Analysis\\FacadeManager.cs",
               "RelativeToolTip": "Analysis\\FacadeManager.cs",
-              "ViewState": "AQIAAIkBAAAAAAAAAAAcwJcBAAA2AAAA",
+              "ViewState": "AQIAAFQCAAAAAAAAAAAtwHACAAAmAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T05:36:39.042Z"
+              "WhenOpened": "2025-09-03T05:36:39.042Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 2,
               "Title": "WallDetectionSettings.cs",
               "DocumentMoniker": "D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\Analysis\\WallDetectionSettings.cs",
               "RelativeDocumentMoniker": "Analysis\\WallDetectionSettings.cs",
               "ToolTip": "D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\Analysis\\WallDetectionSettings.cs",
               "RelativeToolTip": "Analysis\\WallDetectionSettings.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAuwBsAAAAYAAAA",
+              "ViewState": "AQIAAHUAAAAAAAAAAAAuwAgAAAAQAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-05T07:20:53.534Z"
+              "WhenOpened": "2025-09-05T07:20:53.534Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -136,13 +138,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "PCDViewer_New.cs",
               "DocumentMoniker": "D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\PCDViewer_New.cs",
               "RelativeDocumentMoniker": "PCDViewer_New.cs",
               "ToolTip": "D:\\project\\code\\LoadPCDtest\\PointCloudLoad\\PCDViewer_New.cs",
               "RelativeToolTip": "PCDViewer_New.cs",
-              "ViewState": "AQIAACQDAAAAAAAAAAAuwEUDAABgAAAA",
+              "ViewState": "AQIAAGIDAAAAAAAAAAAawH0DAAAuAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-03T05:36:22.714Z",
               "EditorCaption": ""

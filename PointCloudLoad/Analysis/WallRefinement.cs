@@ -38,13 +38,15 @@ namespace LoadPCDtest.Analysis
 			int minBaselinePoints = 50,
 			bool chooseAfterDrop = true,
 			float outwardBiasMeters = 0.0f,
-			float ratioThreshold = -1f)
+			float ratioThreshold = -1f,
+			float extentBandMeters = 0.20f,
+			float extentPercentile = 0.05f,
+			int minExtentPoints = 10)
 		{
 			var results = new List<WallFace>();
 			if (points == null || points.Count == 0) return results;
 			if (polygon == null || polygon.Count < 2) return results;
 
-			// 计算多边形方向（>0 逆时针，<0 顺时针）
 			float signedArea = 0f;
 			for (int i = 0; i < polygon.Count; i++)
 			{
@@ -58,6 +60,8 @@ namespace LoadPCDtest.Analysis
 			var pts2 = new List<Vector2>(points.Count);
 			for (int i = 0; i < points.Count; i++) pts2.Add(new Vector2(points[i].X, points[i].Y));
 
+			// 保存每条边的几何与最佳偏移
+			var edges = new List<(Vector2 p0, Vector2 p1, float len, Vector2 u, Vector2 inward, int baseline, float bestOffset, int bestCount)>();
 			for (int i = 0; i < polygon.Count; i++)
 			{
 				var p0 = polygon[i];
@@ -66,11 +70,9 @@ namespace LoadPCDtest.Analysis
 				float len = edge.Length;
 				if (len < 1e-6f) continue;
 
-				var u = edge / len; // 切向单位向量（沿边）
-				// 逆时针多边形，内部在左侧；顺时针内部在右侧
+				var u = edge / len; 
 				Vector2 inward = isCCW ? new Vector2(-u.Y, u.X) : new Vector2(u.Y, -u.X);
 
-				// 基线：宽度 = initialWidthMeters，统计 [0, len] × [0, initialWidth]
 				int baseline = 0;
 				for (int k = 0; k < pts2.Count; k++)
 				{
@@ -87,7 +89,7 @@ namespace LoadPCDtest.Analysis
 					continue;
 				}
 
-				// 扫描：逐步缩小宽度，得到占比曲线
+				// 逐步缩小宽度，得到占比曲线
 				int steps = Math.Max(1, (int)Math.Ceiling(initialWidthMeters / Math.Max(1e-3f, stepMeters)));
 				var widths = new float[steps + 1];
 				var counts = new int[steps + 1];
@@ -133,17 +135,20 @@ namespace LoadPCDtest.Analysis
 
 				if (bestIndex < 0)
 				{
-					float bestDrop = float.NegativeInfinity;
-					bestIndex = 0;
+					float bestDrop = float.PositiveInfinity; // 寻找最小(最负)的下降幅度
+					int selected = 0;
+					bool found = false;
 					for (int si = 1; si <= steps; si++)
 					{
 						float drop = ratios[si] - ratios[si - 1]; // 负值为下降
 						if (drop < bestDrop)
 						{
 							bestDrop = drop;
-							bestIndex = chooseAfterDrop ? si : Math.Max(0, si - 1);
+							selected = chooseAfterDrop ? si : Math.Max(0, si - 1);
+							found = true;
 						}
 					}
+					bestIndex = found ? selected : (chooseAfterDrop ? steps : Math.Max(0, steps - 1));
 				}
 
 				float bestOffset = widths[bestIndex];
@@ -155,17 +160,71 @@ namespace LoadPCDtest.Analysis
 				}
 				int bestCount = counts[bestIndex];
 
+				edges.Add((p0, p1, len, u, inward, baseline, bestOffset, bestCount));
+			}
+
+			// 通过相邻偏移线的交点裁剪各墙段，去除超出的部分
+			if (edges.Count == 0) return results;
+
+			Vector2 LinePoint(int idx)
+			{
+				var e = edges[idx];
+				return e.p0 + e.inward * e.bestOffset;
+			}
+
+			float Cross(Vector2 a, Vector2 b) => a.X * b.Y - a.Y * b.X;
+
+			bool TryIntersect(Vector2 pA, Vector2 dirA, Vector2 pB, Vector2 dirB, out Vector2 inter)
+			{
+				float denom = Cross(dirA, dirB);
+				if (Math.Abs(denom) < 1e-6f)
+				{
+					inter = pA; // 平行时退化
+					return false;
+				}
+				Vector2 diff = pB - pA;
+				float s = Cross(diff, dirB) / denom;
+				inter = pA + dirA * s;
+				return true;
+			}
+
+			int n = edges.Count;
+			for (int i = 0; i < n; i++)
+			{
+				int iPrev = (i - 1 + n) % n;
+				int iNext = (i + 1) % n;
+				var e = edges[i];
+				var pLine = LinePoint(i);
+				var pPrev = LinePoint(iPrev);
+				var pNext = LinePoint(iNext);
+
+				Vector2 start, end;
+				bool ok1 = TryIntersect(pLine, e.u, pPrev, edges[iPrev].u, out start);
+				bool ok2 = TryIntersect(pLine, e.u, pNext, edges[iNext].u, out end);
+				if (!ok1 || !ok2)
+				{
+					// 平行等异常情况：退回到整段（按边长）
+					start = e.p0 + e.inward * e.bestOffset;
+					end = e.p1 + e.inward * e.bestOffset;
+				}
+
+				// 确保方向与切向一致
+				if (Vector2.Dot(end - start, e.u) < 0)
+				{
+					var tmp = start; start = end; end = tmp;
+				}
+
 				results.Add(new WallFace
 				{
-					Start = p0 + inward * bestOffset,
-					End = p1 + inward * bestOffset,
-					NormalInward = inward,
-					EdgeLength = len,
-					BestOffset = bestOffset,
+					Start = start,
+					End = end,
+					NormalInward = e.inward,
+					EdgeLength = (end - start).Length,
+					BestOffset = e.bestOffset,
 					InitialWidth = initialWidthMeters,
 					Step = stepMeters,
-					BaselineCount = baseline,
-					BestCount = bestCount
+					BaselineCount = e.baseline,
+					BestCount = e.bestCount
 				});
 			}
 

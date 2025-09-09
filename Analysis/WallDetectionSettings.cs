@@ -15,6 +15,8 @@ namespace LoadPCDtest.Analysis
 			public float OutwardBiasMeters { get; set; }
 			public bool UseRatioThreshold { get; set; }
 			public float RatioThresholdPercent { get; set; }
+			public float AlongSpacingMeters { get; set; }
+			public float ZSpacingMeters { get; set; }
 		}
 
 		public static Values Defaults { get; } = new Values
@@ -25,7 +27,9 @@ namespace LoadPCDtest.Analysis
 			ChooseAfterDrop = true,
 			OutwardBiasMeters = 0.05f,
 			UseRatioThreshold = true,
-			RatioThresholdPercent = 60f
+			RatioThresholdPercent = 60f,
+			AlongSpacingMeters = 0.30f,
+			ZSpacingMeters = 0.50f
 		};
 
 		private NumericUpDown numWidth;
@@ -35,6 +39,8 @@ namespace LoadPCDtest.Analysis
 		private NumericUpDown numBias;
 		private CheckBox chkUseRatio;
 		private NumericUpDown numRatio;
+		private NumericUpDown numAlong;
+		private NumericUpDown numZSpacing;
 		private Button btnOk;
 		private Button btnCancel;
 
@@ -47,7 +53,7 @@ namespace LoadPCDtest.Analysis
 			StartPosition = FormStartPosition.CenterParent;
 			MaximizeBox = false;
 			MinimizeBox = false;
-			ClientSize = new Size(360, 260);
+			ClientSize = new Size(360, 330);
 
 			var lblWidth = new Label { Text = "初始宽度 (m):", Left = 12, Top = 16, Width = 130 };
 			numWidth = new NumericUpDown { Left = 160, Top = 12, Width = 160, DecimalPlaces = 2, Minimum = 0.10M, Maximum = 50M, Increment = 0.10M };
@@ -73,10 +79,18 @@ namespace LoadPCDtest.Analysis
 			numRatio = new NumericUpDown { Left = 160, Top = 154, Width = 160, DecimalPlaces = 0, Minimum = 1, Maximum = 100, Increment = 1 };
 			numRatio.Value = (decimal)Defaults.RatioThresholdPercent;
 
-			btnOk = new Button { Text = "确定", Left = 160, Width = 70, Top = 200, DialogResult = DialogResult.OK };
-			btnCancel = new Button { Text = "取消", Left = 250, Width = 70, Top = 200, DialogResult = DialogResult.Cancel };
+			var lblAlong = new Label { Text = "沿墙采样间距 (m):", Left = 12, Top = 186, Width = 130 };
+			numAlong = new NumericUpDown { Left = 160, Top = 182, Width = 160, DecimalPlaces = 2, Minimum = 0.05M, Maximum = 10M, Increment = 0.05M };
+			numAlong.Value = (decimal)Defaults.AlongSpacingMeters;
 
-			Controls.AddRange(new Control[] { lblWidth, numWidth, lblStep, numStep, lblBaseline, numBaseline, chkAfterDrop, lblBias, numBias, chkUseRatio, numRatio, btnOk, btnCancel });
+			var lblZ = new Label { Text = "Z层间距 (m):", Left = 12, Top = 216, Width = 130 };
+			numZSpacing = new NumericUpDown { Left = 160, Top = 212, Width = 160, DecimalPlaces = 2, Minimum = 0.05M, Maximum = 10M, Increment = 0.05M };
+			numZSpacing.Value = (decimal)Defaults.ZSpacingMeters;
+
+			btnOk = new Button { Text = "确定", Left = 160, Width = 70, Top = 260, DialogResult = DialogResult.OK };
+			btnCancel = new Button { Text = "取消", Left = 250, Width = 70, Top = 260, DialogResult = DialogResult.Cancel };
+
+			Controls.AddRange(new Control[] { lblWidth, numWidth, lblStep, numStep, lblBaseline, numBaseline, chkAfterDrop, lblBias, numBias, chkUseRatio, numRatio, lblAlong, numAlong, lblZ, numZSpacing, btnOk, btnCancel });
 
 			AcceptButton = btnOk;
 			CancelButton = btnCancel;
@@ -91,7 +105,9 @@ namespace LoadPCDtest.Analysis
 					ChooseAfterDrop = chkAfterDrop.Checked,
 					OutwardBiasMeters = (float)numBias.Value,
 					UseRatioThreshold = chkUseRatio.Checked,
-					RatioThresholdPercent = (float)numRatio.Value
+					RatioThresholdPercent = (float)numRatio.Value,
+					AlongSpacingMeters = (float)numAlong.Value,
+					ZSpacingMeters = (float)numZSpacing.Value
 				};
 			};
 		}
@@ -111,6 +127,8 @@ namespace LoadPCDtest.Analysis
 					Defaults.OutwardBiasMeters = values.OutwardBiasMeters;
 					Defaults.UseRatioThreshold = values.UseRatioThreshold;
 					Defaults.RatioThresholdPercent = values.RatioThresholdPercent;
+					Defaults.AlongSpacingMeters = values.AlongSpacingMeters;
+					Defaults.ZSpacingMeters = values.ZSpacingMeters;
 				}
 				return res == DialogResult.OK;
 			}

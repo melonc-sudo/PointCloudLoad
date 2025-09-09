@@ -10,6 +10,7 @@ using LoadPCDtest.IO;
 using LoadPCDtest.Filtering;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace LoadPCDtest
 {
@@ -27,6 +28,13 @@ namespace LoadPCDtest
         
         // 交互状态
         private Point lastMouse;
+        // 最近一次墙面检测上下文
+        private List<Analysis.WallRefinement.WallFace> lastDetectedFaces = null;
+        private float lastZMin = 0f;
+        private float lastZMax = 0f;
+        private List<Vector2> lastPolygon = null;
+        private List<Vector3> lastFilteredPoints = null;
+        private float currentOutwardBias = 0f;
         
         public PCDViewer_New(string filePath = null)
         {
@@ -138,9 +146,17 @@ namespace LoadPCDtest
             
             displayMenu.DropDownItems.Add(pointSizeSubMenu);
             
+            // 导出菜单
+            var exportMenu = new ToolStripMenuItem("导出(&E)");
+            var exportWallsItem = new ToolStripMenuItem("导出检测墙面为PLY");
+            exportWallsItem.ShortcutKeys = Keys.Control | Keys.E;
+            exportWallsItem.Click += (s, e) => ExportDetectedWalls();
+            exportMenu.DropDownItems.Add(exportWallsItem);
+            
             menuStrip.Items.Add(fileMenu);
             menuStrip.Items.Add(toolsMenu);
             menuStrip.Items.Add(displayMenu);
+            menuStrip.Items.Add(exportMenu);
             
             this.MainMenuStrip = menuStrip;
             this.Controls.Add(menuStrip);
@@ -433,6 +449,12 @@ namespace LoadPCDtest
                     renderer.ToggleDetectedWalls();
                     UpdateTitle();
                     gl.Invalidate();
+                    break;
+                case Keys.OemOpenBrackets: // [
+                    AdjustOutwardBias(-0.05f);
+                    break;
+                case Keys.OemCloseBrackets: // ]
+                    AdjustOutwardBias(+0.05f);
                     break;
             }
         }
@@ -827,10 +849,11 @@ namespace LoadPCDtest
                 PointCloudFilter.SaveFilteredPointCloud(filteredPoints, pointCloudData.CurrentFilePath);
 
                 // 生成并设置检测墙面点（内存中），并默认显示开关保持现状
+                float zMin = filteredPoints.Min(p => p.Z);
+                float zMax = filteredPoints.Max(p => p.Z);
+                List<Analysis.WallRefinement.WallFace> faces = null;
                 try
                 {
-                    float zMin = filteredPoints.Min(p => p.Z);
-                    float zMax = filteredPoints.Max(p => p.Z);
 
                     // 使用最新设置
                     float width = Analysis.WallDetectionSettings.Defaults.InitialWidthMeters;
@@ -840,7 +863,7 @@ namespace LoadPCDtest
                     float bias = Analysis.WallDetectionSettings.Defaults.OutwardBiasMeters;
                     float ratioTh = Analysis.WallDetectionSettings.Defaults.UseRatioThreshold ? (Analysis.WallDetectionSettings.Defaults.RatioThresholdPercent / 100f) : -1f;
 
-                    var faces = Analysis.WallRefinement.DetectFacesByEdgeSweep(
+                    faces = Analysis.WallRefinement.DetectFacesByEdgeSweep(
                         filteredPoints,
                         worldPolygon,
                         initialWidthMeters: width,
@@ -850,14 +873,31 @@ namespace LoadPCDtest
                         outwardBiasMeters: bias,
                         ratioThreshold: ratioTh);
 
+                    // 保存上下文以用于偏置调整与导出
+                    lastDetectedFaces = faces;
+                    lastZMin = zMin;
+                    lastZMax = zMax;
+                    lastPolygon = new List<Vector2>(worldPolygon);
+                    lastFilteredPoints = new List<Vector3>(filteredPoints);
+                    currentOutwardBias = bias;
+
+                    float along = Analysis.WallDetectionSettings.Defaults.AlongSpacingMeters;
+                    float zspace = Analysis.WallDetectionSettings.Defaults.ZSpacingMeters;
                     renderer.DetectedWallPoints = Analysis.WallRefinement.GenerateWallPoints(
-                        faces, zMin, zMax, alongSpacing: 0.3f, zSpacing: 0.5f);
+                        faces, zMin, zMax, alongSpacing: along, zSpacing: zspace);
 
                     // 首次输出选定拐点的占比
-                    if (!Analysis.WallRefinement.HasReportedOnce && Analysis.WallRefinement.LastSelectedRatio >= 0f)
+                    if (!Analysis.WallRefinement.HasReportedOnce && faces != null && faces.Count > 0)
                     {
                         Analysis.WallRefinement.HasReportedOnce = true;
-                        MessageBox.Show($"选定墙面拐点占比: {(Analysis.WallRefinement.LastSelectedRatio * 100f):F1}%", "墙面检测", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        var sb = new System.Text.StringBuilder();
+                        for (int i = 0; i < faces.Count; i++)
+                        {
+                            var ff = faces[i];
+                            float ratioFace = ff.BaselineCount > 0 ? (float)ff.BestCount / ff.BaselineCount : 0f;
+                            sb.AppendLine($"边{i + 1}: {ratioFace * 100f:F1}% (基线{ff.BaselineCount}, 命中{ff.BestCount}, 偏移{ff.BestOffset:F2}m)");
+                        }
+                        MessageBox.Show("各墙面拐点占比:\n\n" + sb.ToString(), "墙面检测", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
 
                     System.Diagnostics.Debug.WriteLine($"检测墙面点: {renderer.DetectedWallPoints.Count} 个");
@@ -867,36 +907,6 @@ namespace LoadPCDtest
                     System.Diagnostics.Debug.WriteLine($"生成检测墙面点失败: {exWalls.Message}");
                 }
 
-                // 对多边形边执行内缩扫描，检测墙面线，并导出为PLY以便查看
-                try
-                {
-                    float zMin = filteredPoints.Min(p => p.Z);
-                    float zMax = filteredPoints.Max(p => p.Z);
-
-                    var faces = Analysis.WallRefinement.DetectFacesByEdgeSweep(
-                        filteredPoints,
-                        worldPolygon,
-                        initialWidthMeters: 5.0f,
-                        stepMeters: 0.10f,
-                        minBaselinePoints: 50);
-
-                    if (faces != null && faces.Count > 0)
-                    {
-                        string dir = System.IO.Path.GetDirectoryName(pointCloudData.CurrentFilePath) ?? ".";
-                        string outPath = System.IO.Path.Combine(dir, $"detected_walls_{DateTime.Now:yyyyMMdd_HHmmss}.ply");
-                        Analysis.WallRefinement.ExportFacesAsPly(faces, outPath, zMin, zMax, alongSpacing: 0.3f, zSpacing: 0.5f);
-                        System.Diagnostics.Debug.WriteLine($"墙面检测完成: {faces.Count} 条，已导出: {outPath}");
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine("墙面检测结果为空（点数不足或边界不稳定）");
-                    }
-                }
-                catch (System.Exception exFaces)
-                {
-                    System.Diagnostics.Debug.WriteLine($"墙面检测失败: {exFaces.Message}");
-                }
-                
                 UpdateTitle();
                 gl.Invalidate();
                 
@@ -928,10 +938,11 @@ namespace LoadPCDtest
                 
                 // 生成立面状态
                 string generatedFacadeInfo = renderer.ShowGeneratedFacades ? " [生成立面:开]" : " [生成立面:关]";
+                string biasInfo = renderer.ShowDetectedWalls ? $" [外推偏置:{currentOutwardBias:F2}m]" : "";
                 
                 Text = $"点云查看器 - {fileName} ({pointCloudData.Points.Count:N0} 个点) - " +
                        $"缩放:{camera.GlobalScale:F1}x 点大小:{renderer.PointSize:F1} - " +
-                       $"{mappingName} - {colorMode}{facadeInfo}{generatedFacadeInfo} [P:原始点云 G:生成立面/导出 F1:主正面 F2:主负面 F3:垂直正面 F4:垂直负面]";
+                       $"{mappingName} - {colorMode}{facadeInfo}{generatedFacadeInfo}{biasInfo} [P:原始点云 G:生成立面 F1~F4:立面 H:墙点 [/]:外推偏置 Ctrl+E:导出]";
             }
             else
             {
@@ -975,6 +986,121 @@ namespace LoadPCDtest
             renderer.ToggleGeneratedFacades();
             UpdateTitle();
             gl.Invalidate();
+        }
+
+        /// <summary>
+        /// 调整外推偏置并重算墙面
+        /// </summary>
+        private bool isBiasRecomputing = false;
+        private DateTime lastBiasRequest = DateTime.MinValue;
+        private async void AdjustOutwardBias(float delta)
+        {
+            if (lastFilteredPoints == null || lastFilteredPoints.Count == 0 || lastPolygon == null || lastPolygon.Count < 2)
+            {
+                System.Diagnostics.Debug.WriteLine("没有可用于重算的最近范围选择上下文");
+                return;
+            }
+
+            // 目标偏置（步长最小 0.005m，避免过小变化看不出效果）
+            float step = Math.Abs(delta) < 0.005f ? (delta >= 0 ? 0.005f : -0.005f) : delta;
+            float targetBias = Math.Max(0f, currentOutwardBias + step);
+            if (Math.Abs(targetBias - currentOutwardBias) < 1e-4f)
+            {
+                return;
+            }
+            currentOutwardBias = targetBias;
+            Analysis.WallDetectionSettings.Defaults.OutwardBiasMeters = currentOutwardBias;
+
+            lastBiasRequest = DateTime.UtcNow;
+            if (isBiasRecomputing) return; // 已有重算在进行，等它批次处理
+
+            isBiasRecomputing = true;
+            try
+            {
+                // 防抖：等待 60ms 聚合连续按键
+                await Task.Delay(60);
+                // 若期间有更新，继续等到稳定 60ms
+                while ((DateTime.UtcNow - lastBiasRequest).TotalMilliseconds < 55)
+                {
+                    await Task.Delay(20);
+                }
+
+                // 读取参数
+                float width = Analysis.WallDetectionSettings.Defaults.InitialWidthMeters;
+                float stepMeters = Analysis.WallDetectionSettings.Defaults.StepMeters;
+                int minBaseline = Analysis.WallDetectionSettings.Defaults.MinBaselinePoints;
+                bool afterDrop = Analysis.WallDetectionSettings.Defaults.ChooseAfterDrop;
+                float ratioTh = Analysis.WallDetectionSettings.Defaults.UseRatioThreshold ? (Analysis.WallDetectionSettings.Defaults.RatioThresholdPercent / 100f) : -1f;
+                float along = Analysis.WallDetectionSettings.Defaults.AlongSpacingMeters;
+                float zspace = Analysis.WallDetectionSettings.Defaults.ZSpacingMeters;
+                float biasNow = currentOutwardBias;
+
+                // 后台重算，避免卡顿
+                var faces = await Task.Run(() => Analysis.WallRefinement.DetectFacesByEdgeSweep(
+                    lastFilteredPoints,
+                    lastPolygon,
+                    initialWidthMeters: width,
+                    stepMeters: stepMeters,
+                    minBaselinePoints: minBaseline,
+                    chooseAfterDrop: afterDrop,
+                    outwardBiasMeters: biasNow,
+                    ratioThreshold: ratioTh));
+
+                // 生成显示点
+                var pts = await Task.Run(() => Analysis.WallRefinement.GenerateWallPoints(
+                    faces, lastZMin, lastZMax, alongSpacing: along, zSpacing: zspace));
+
+                // 回到UI线程更新
+                if (!IsDisposed)
+                {
+                    try
+                    {
+                        lastDetectedFaces = faces;
+                        renderer.DetectedWallPoints = pts;
+                        renderer.ShowDetectedWalls = true;
+                        UpdateTitle();
+                        gl.Invalidate();
+                        gl.Refresh();
+                    }
+                    catch { }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"外推偏置调整失败: {ex.Message}");
+            }
+            finally
+            {
+                isBiasRecomputing = false;
+            }
+        }
+
+        /// <summary>
+        /// 导出当前检测墙面为 PLY
+        /// </summary>
+        private void ExportDetectedWalls()
+        {
+            if (lastDetectedFaces == null || lastDetectedFaces.Count == 0)
+            {
+                MessageBox.Show("当前没有检测到的墙面可导出，请先完成范围选择和检测。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                string dir = System.IO.Path.GetDirectoryName(pointCloudData.CurrentFilePath) ?? ".";
+                string outPath = System.IO.Path.Combine(dir, $"detected_walls_{DateTime.Now:yyyyMMdd_HHmmss}.ply");
+
+                float along = Analysis.WallDetectionSettings.Defaults.AlongSpacingMeters;
+                float zspace = Analysis.WallDetectionSettings.Defaults.ZSpacingMeters;
+                Analysis.WallRefinement.ExportFacesAsPly(lastDetectedFaces, outPath, lastZMin, lastZMax, alongSpacing: along, zSpacing: zspace);
+                System.Diagnostics.Debug.WriteLine($"墙面已导出: {outPath}");
+                MessageBox.Show($"已导出: {outPath}", "导出完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }
