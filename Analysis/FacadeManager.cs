@@ -642,7 +642,7 @@ namespace LoadPCDtest.Analysis
                         int command = 16;  // NAV_WAYPOINT
                         double p1 = 0, p2 = 0, p3 = 0, p4 = 0; // 预留参数
                         double lat = p.X;
-                        double lon = p.Z;
+                        double lon = p.Y;
                         double alt = p.Z;
                         int autocontinue = 1;
                         sw.WriteLine($"{seq}\t{current}\t{frame}\t{command}\t{p1:F8}\t{p2:F8}\t{p3:F8}\t{p4:F8}\t{lat:F8}\t{lon:F8}\t{alt:F6}\t{autocontinue}");

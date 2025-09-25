@@ -35,16 +35,34 @@ namespace LoadPCDtest
         private Pen pointPen = new Pen(Color.White, 1);
         private Pen polygonPen = new Pen(Color.Yellow, 2);
         private Pen selectedPen = new Pen(Color.Red, 2);
+        private Pen initialBoundaryPen = new Pen(Color.Orange, 3); // 初始边界使用橙色粗线
         private Brush iconBrush = new SolidBrush(Color.Red);
         private Brush selectedIconBrush = new SolidBrush(Color.Yellow);
+        private Brush initialBoundaryIconBrush = new SolidBrush(Color.Orange); // 初始边界图标
         private Brush polygonBrush = new SolidBrush(Color.FromArgb(50, Color.Green));
+        private Brush initialBoundaryBrush = new SolidBrush(Color.FromArgb(30, Color.Orange)); // 初始边界填充
+        
+        private bool hasInitialBoundary = false; // 标记是否有初始边界
         
         public event EventHandler<List<Vector2>> RangeSelected;
         
-        public RangeSelectionWindow(List<Vector3> pointCloudData)
+        public RangeSelectionWindow(List<Vector3> pointCloudData) : this(pointCloudData, null)
+        {
+        }
+
+        public RangeSelectionWindow(List<Vector3> pointCloudData, List<Vector2> initialBoundary)
         {
             InitializeComponent();
-            this.pointCloud = pointCloudData;
+            // 窗口绘制性能优化：若点太多则降采样
+            if (pointCloudData != null && pointCloudData.Count > 200000)
+            {
+                this.pointCloud = DownsamplePoints(pointCloudData, 200000);
+                System.Diagnostics.Debug.WriteLine($"RangeSelectionWindow: 点云降采样到 {this.pointCloud.Count} 个");
+            }
+            else
+            {
+                this.pointCloud = pointCloudData;
+            }
             this.selectedPoints = new List<PointF>();
             
             // 设置窗口属性
@@ -56,6 +74,21 @@ namespace LoadPCDtest
             
             // 转换3D点云到2D
             ConvertTo2D();
+            
+            // 如果有初始边界，则设置为选择点
+            if (initialBoundary != null && initialBoundary.Count > 0)
+            {
+                hasInitialBoundary = true;
+                System.Diagnostics.Debug.WriteLine($"设置初始边界: {initialBoundary.Count} 个点");
+                foreach (var point in initialBoundary)
+                {
+                    selectedPoints.Add(new PointF(point.X, point.Y));
+                    System.Diagnostics.Debug.WriteLine($"  初始边界点: ({point.X:F2}, {point.Y:F2})");
+                }
+                
+                // 更新窗口标题
+                this.Text = "2D范围选择 - 基于墙面分离结果的初始边界（可拖拽调整）";
+            }
             
             // 绑定事件
             this.MouseDown += OnMouseDown;
@@ -69,6 +102,25 @@ namespace LoadPCDtest
             // 设置键盘焦点
             this.KeyPreview = true;
             this.Focus();
+        }
+
+        /// <summary>
+        /// 为2D显示做的均匀降采样，避免界面卡顿
+        /// </summary>
+        private List<Vector3> DownsamplePoints(List<Vector3> points, int maxPoints)
+        {
+            if (points == null || points.Count <= maxPoints) return points;
+            var result = new List<Vector3>(maxPoints);
+            double step = (double)points.Count / maxPoints;
+            double idx = 0.0;
+            for (int i = 0; i < maxPoints; i++)
+            {
+                int pos = (int)Math.Round(idx);
+                if (pos >= points.Count) pos = points.Count - 1;
+                result.Add(points[pos]);
+                idx += step;
+            }
+            return result;
         }
         
         private void InitializeComponent()
@@ -347,23 +399,35 @@ namespace LoadPCDtest
                 return new PointF(screenX, screenY);
             }).ToArray();
             
+            // 选择使用的画笔和画刷
+            Pen borderPen = hasInitialBoundary ? initialBoundaryPen : polygonPen;
+            Brush fillBrush = hasInitialBoundary ? initialBoundaryBrush : polygonBrush;
+            
             // 绘制多边形填充
             if (screenPoints.Length >= 3)
             {
-                g.FillPolygon(polygonBrush, screenPoints);
+                g.FillPolygon(fillBrush, screenPoints);
             }
             
             // 绘制多边形边框
             if (screenPoints.Length >= 2)
             {
-                g.DrawPolygon(polygonPen, screenPoints);
+                g.DrawPolygon(borderPen, screenPoints);
             }
             
             // 绘制选择点图标
             for (int i = 0; i < screenPoints.Length; i++)
             {
                 var point = screenPoints[i];
-                var brush = (dragIndex == i) ? selectedIconBrush : iconBrush;
+                
+                // 选择图标颜色：拖拽时为黄色，初始边界为橙色，普通为红色
+                Brush brush;
+                if (dragIndex == i)
+                    brush = selectedIconBrush; // 黄色（拖拽中）
+                else if (hasInitialBoundary)
+                    brush = initialBoundaryIconBrush; // 橙色（初始边界）
+                else
+                    brush = iconBrush; // 红色（普通选择）
                 
                 // 根据缩放调整图标大小
                 float iconSize = ICON_SIZE * Math.Max(0.5f, Math.Min(2.0f, zoomFactor));
@@ -404,8 +468,24 @@ namespace LoadPCDtest
                 int statusY = 10 + instructions.Length * 18 + 10;
                 if (selectedPoints.Count > 0)
                 {
-                    g.DrawString($"已选择 {selectedPoints.Count} 个点", font, textBrush, 10, statusY);
+                    string statusText = $"已选择 {selectedPoints.Count} 个点";
+                    if (this.Text.Contains("初始边界"))
+                    {
+                        statusText += " (基于墙面分离结果)";
+                    }
+                    g.DrawString(statusText, font, textBrush, 10, statusY);
                     statusY += 18;
+                }
+                
+                // 如果有初始边界，显示特别提示
+                if (this.Text.Contains("初始边界"))
+                {
+                    using (Brush highlightBrush = new SolidBrush(Color.Orange))
+                    {
+                        g.DrawString("※ 显示的边界来自墙面分离结果", font, highlightBrush, 10, statusY);
+                        g.DrawString("※ 可以拖拽调整边界点位置", font, highlightBrush, 10, statusY + 18);
+                        statusY += 36;
+                    }
                 }
                 
                 // 显示缩放和平移信息
@@ -524,9 +604,12 @@ namespace LoadPCDtest
                 pointPen?.Dispose();
                 polygonPen?.Dispose();
                 selectedPen?.Dispose();
+                initialBoundaryPen?.Dispose();
                 iconBrush?.Dispose();
                 selectedIconBrush?.Dispose();
+                initialBoundaryIconBrush?.Dispose();
                 polygonBrush?.Dispose();
+                initialBoundaryBrush?.Dispose();
             }
             base.Dispose(disposing);
         }

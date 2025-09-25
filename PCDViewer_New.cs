@@ -8,6 +8,7 @@ using LoadPCDtest.Core;
 using LoadPCDtest.Rendering;
 using LoadPCDtest.IO;
 using LoadPCDtest.Filtering;
+using LoadPCDtest.Analysis;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,6 +27,13 @@ namespace LoadPCDtest
         private PointCloudRenderer renderer;
         private CoordinateMapping currentMapping = CoordinateMapping.Original;
         
+        // 墙面分离相关组件
+        private WallSeparationAnalyzer wallAnalyzer;
+        private WallRenderer wallRenderer;
+        private List<WallSeparationAnalyzer.Wall> detectedWalls = null;
+        private bool showWalls = false;
+        private bool showOriginalPointCloud = true;
+        
         // 交互状态
         private Point lastMouse;
         // 最近一次墙面检测上下文
@@ -38,8 +46,8 @@ namespace LoadPCDtest
         
         public PCDViewer_New(string filePath = null)
         {
-            InitializeComponents();
-            InitializeManagers();
+            InitializeManagers(); // 先初始化管理器
+            InitializeComponents(); // 再创建UI组件（包括菜单）
             
             if (!string.IsNullOrEmpty(filePath))
             {
@@ -91,6 +99,8 @@ namespace LoadPCDtest
             pointCloudData = new PointCloudData();
             camera = new CameraController();
             renderer = new PointCloudRenderer();
+            wallAnalyzer = new WallSeparationAnalyzer();
+            wallRenderer = new WallRenderer();
         }
 
         /// <summary>
@@ -121,7 +131,17 @@ namespace LoadPCDtest
             rangeSelectionMenuItem.ShortcutKeys = Keys.Control | Keys.R;
             rangeSelectionMenuItem.Click += (s, e) => StartRangeSelection();
             
+            var wallSeparationMenuItem = new ToolStripMenuItem("墙面分离(&W)");
+            wallSeparationMenuItem.ShortcutKeys = Keys.Control | Keys.W;
+            wallSeparationMenuItem.Click += (s, e) => PerformWallSeparation();
+            
+            var wallSettingsMenuItem = new ToolStripMenuItem("墙面检测参数(&P)");
+            wallSettingsMenuItem.Click += (s, e) => ShowWallDetectionSettings();
+            
             toolsMenu.DropDownItems.Add(rangeSelectionMenuItem);
+            toolsMenu.DropDownItems.Add(new ToolStripSeparator());
+            toolsMenu.DropDownItems.Add(wallSeparationMenuItem);
+            toolsMenu.DropDownItems.Add(wallSettingsMenuItem);
             
             // 显示菜单
             var displayMenu = new ToolStripMenuItem("显示(&D)");
@@ -144,14 +164,110 @@ namespace LoadPCDtest
             pointSizeSubMenu.DropDownItems.Add(decreaseSizeMenuItem);
             pointSizeSubMenu.DropDownItems.Add(resetSizeMenuItem);
             
+            // 墙面显示子菜单
+            var wallDisplaySubMenu = new ToolStripMenuItem("墙面显示(&W)");
+            
+            var showWallsMenuItem = new ToolStripMenuItem("显示墙面(&S)");
+            showWallsMenuItem.CheckOnClick = true;
+            showWallsMenuItem.Checked = showWalls;
+            showWallsMenuItem.Click += (s, e) => ToggleWallsVisibility();
+            
+            var showOriginalMenuItem = new ToolStripMenuItem("显示原始点云(&O)");
+            showOriginalMenuItem.CheckOnClick = true;
+            showOriginalMenuItem.Checked = showOriginalPointCloud;
+            showOriginalMenuItem.Click += (s, e) => ToggleOriginalPointCloudVisibility();
+            
+            var showBoundingBoxesMenuItem = new ToolStripMenuItem("显示墙面边界框(&B)");
+            showBoundingBoxesMenuItem.Click += (s, e) => ToggleBoundingBoxes();
+            
+            wallDisplaySubMenu.DropDownItems.Add(showWallsMenuItem);
+            wallDisplaySubMenu.DropDownItems.Add(showOriginalMenuItem);
+            wallDisplaySubMenu.DropDownItems.Add(showBoundingBoxesMenuItem);
+            wallDisplaySubMenu.DropDownItems.Add(new ToolStripSeparator());
+            
+            // 各个墙面的显示控制
+            var northWallMenuItem = new ToolStripMenuItem("北墙(红色)(&N)");
+            northWallMenuItem.CheckOnClick = true;
+            northWallMenuItem.Checked = true; // 默认值
+            northWallMenuItem.Click += (s, e) => { 
+                if (wallRenderer != null) { 
+                    wallRenderer.ShowNorthWall = !wallRenderer.ShowNorthWall; 
+                    gl.Invalidate(); 
+                } 
+            };
+            
+            var southWallMenuItem = new ToolStripMenuItem("南墙(绿色)(&S)");
+            southWallMenuItem.CheckOnClick = true;
+            southWallMenuItem.Checked = true; // 默认值
+            southWallMenuItem.Click += (s, e) => { 
+                if (wallRenderer != null) { 
+                    wallRenderer.ShowSouthWall = !wallRenderer.ShowSouthWall; 
+                    gl.Invalidate(); 
+                } 
+            };
+            
+            var eastWallMenuItem = new ToolStripMenuItem("东墙(蓝色)(&E)");
+            eastWallMenuItem.CheckOnClick = true;
+            eastWallMenuItem.Checked = true; // 默认值
+            eastWallMenuItem.Click += (s, e) => { 
+                if (wallRenderer != null) { 
+                    wallRenderer.ShowEastWall = !wallRenderer.ShowEastWall; 
+                    gl.Invalidate(); 
+                } 
+            };
+            
+            var westWallMenuItem = new ToolStripMenuItem("西墙(黄色)(&W)");
+            westWallMenuItem.CheckOnClick = true;
+            westWallMenuItem.Checked = true; // 默认值
+            westWallMenuItem.Click += (s, e) => { 
+                if (wallRenderer != null) { 
+                    wallRenderer.ShowWestWall = !wallRenderer.ShowWestWall; 
+                    gl.Invalidate(); 
+                } 
+            };
+            
+            var horizontalMenuItem = new ToolStripMenuItem("水平面(&H)");
+            horizontalMenuItem.CheckOnClick = true;
+            horizontalMenuItem.Checked = false; // 默认值
+            horizontalMenuItem.Click += (s, e) => { 
+                if (wallRenderer != null) { 
+                    wallRenderer.ShowHorizontalSurfaces = !wallRenderer.ShowHorizontalSurfaces; 
+                    gl.Invalidate(); 
+                } 
+            };
+            
+            wallDisplaySubMenu.DropDownItems.Add(northWallMenuItem);
+            wallDisplaySubMenu.DropDownItems.Add(southWallMenuItem);
+            wallDisplaySubMenu.DropDownItems.Add(eastWallMenuItem);
+            wallDisplaySubMenu.DropDownItems.Add(westWallMenuItem);
+            wallDisplaySubMenu.DropDownItems.Add(horizontalMenuItem);
+            
             displayMenu.DropDownItems.Add(pointSizeSubMenu);
+            displayMenu.DropDownItems.Add(new ToolStripSeparator());
+            displayMenu.DropDownItems.Add(wallDisplaySubMenu);
             
             // 导出菜单
             var exportMenu = new ToolStripMenuItem("导出(&E)");
+            
             var exportWallsItem = new ToolStripMenuItem("导出检测墙面为PLY");
             exportWallsItem.ShortcutKeys = Keys.Control | Keys.E;
             exportWallsItem.Click += (s, e) => ExportDetectedWalls();
+            
+            var exportWaypointsItem = new ToolStripMenuItem("导出航点文件(&W)");
+            exportWaypointsItem.ToolTipText = "按每个检测墙面分别导出，Z由上到下，沿墙蛇形排序";
+            exportWaypointsItem.Click += (s, e) => ExportDetectedFacesWaypoints();
+            
+            var exportSeparatedWallsItem = new ToolStripMenuItem("导出分离墙面(&S)");
+            exportSeparatedWallsItem.Click += (s, e) => ExportSeparatedWalls();
+            
+            var exportWallReportItem = new ToolStripMenuItem("导出墙面分析报告(&R)");
+            exportWallReportItem.Click += (s, e) => ExportWallAnalysisReport();
+            
             exportMenu.DropDownItems.Add(exportWallsItem);
+            exportMenu.DropDownItems.Add(new ToolStripSeparator());
+            exportMenu.DropDownItems.Add(exportWaypointsItem);
+            exportMenu.DropDownItems.Add(exportSeparatedWallsItem);
+            exportMenu.DropDownItems.Add(exportWallReportItem);
             
             menuStrip.Items.Add(fileMenu);
             menuStrip.Items.Add(toolsMenu);
@@ -236,7 +352,45 @@ namespace LoadPCDtest
             // 执行渲染
             try
             {
-                renderer.RenderPointCloud(pointCloudData, camera, gl.Width, gl.Height);
+                // 渲染原始点云（如果启用）
+                if (showOriginalPointCloud)
+                {
+                    renderer.RenderPointCloud(pointCloudData, camera, gl.Width, gl.Height);
+                }
+                else
+                {
+                    // 如果不显示原始点云，我们需要手动设置OpenGL状态
+                    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+                    
+                    // 设置基本的3D渲染状态
+                    GL.Enable(EnableCap.DepthTest);
+                    GL.DepthFunc(DepthFunction.Less);
+                    
+                    // 设置投影矩阵
+                    GL.MatrixMode(MatrixMode.Projection);
+                    GL.LoadIdentity();
+                    float aspect = (float)gl.Width / gl.Height;
+                    Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(
+                        MathHelper.DegreesToRadians(45), aspect, 0.1f, 1000.0f);
+                    GL.LoadMatrix(ref projection);
+                    
+                    // 设置模型视图矩阵
+                    GL.MatrixMode(MatrixMode.Modelview);
+                    GL.LoadIdentity();
+                    GL.Translate(camera.Pan.X, camera.Pan.Y, -camera.Distance);
+                    GL.Rotate(camera.PointCloudPitch, 1, 0, 0);
+                    GL.Rotate(camera.PointCloudYaw, 0, 1, 0);
+                    float scale = camera.GlobalScale * pointCloudData.ObjectScale;
+                    GL.Scale(scale, scale, scale);
+                    GL.Translate(-pointCloudData.Center.X, -pointCloudData.Center.Y, -pointCloudData.Center.Z);
+                }
+                
+                // 渲染墙面
+                if (showWalls && detectedWalls != null && detectedWalls.Count > 0)
+                {
+                    wallRenderer.RenderWalls(detectedWalls);
+                }
+                
                 gl.SwapBuffers();
             }
             catch (System.Exception ex)
@@ -780,6 +934,384 @@ namespace LoadPCDtest
         }
 
         /// <summary>
+        /// 从墙面分离结果计算凸包多边形
+        /// </summary>
+        private List<Vector2> CalculateWallBoundaries()
+        {
+            if (detectedWalls == null || detectedWalls.Count == 0)
+                return null;
+
+            // 只考虑垂直墙面（排除水平面）
+            var verticalWalls = detectedWalls.Where(w => w.Direction != WallSeparationAnalyzer.WallDirection.Horizontal).ToList();
+            
+            if (verticalWalls.Count == 0)
+                return null;
+
+            System.Diagnostics.Debug.WriteLine($"计算墙面凸包多边形：共 {verticalWalls.Count} 面垂直墙");
+
+            // 收集所有垂直墙面的点，压缩Z轴到XY平面
+            var allWallPoints2D = new List<Vector2>();
+            
+            foreach (var wall in verticalWalls)
+            {
+                foreach (var point in wall.Points)
+                {
+                    // 压缩Z轴，只保留XY坐标
+                    allWallPoints2D.Add(new Vector2(point.X, point.Y));
+                }
+                System.Diagnostics.Debug.WriteLine($"{wall.Name}: {wall.Points.Count} 个点压缩到XY平面");
+            }
+
+            // 大数据下先降采样，避免UI阻塞
+            if (allWallPoints2D.Count > 20000)
+            {
+                allWallPoints2D = DownsamplePoints2D(allWallPoints2D, 20000);
+                System.Diagnostics.Debug.WriteLine($"墙面点降采样到 {allWallPoints2D.Count} 个用于凸包");
+            }
+
+            if (allWallPoints2D.Count < 3)
+            {
+                System.Diagnostics.Debug.WriteLine("点数不足，无法计算凸包");
+                return null;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"总共 {allWallPoints2D.Count} 个2D点用于计算凸包");
+
+            // 计算凸包
+            var convexHull = CalculateConvexHull(allWallPoints2D);
+            
+            if (convexHull.Count >= 3)
+            {
+                System.Diagnostics.Debug.WriteLine($"成功计算出 {convexHull.Count} 个凸包顶点");
+                for (int i = 0; i < convexHull.Count; i++)
+                {
+                    System.Diagnostics.Debug.WriteLine($"  顶点{i}: ({convexHull[i].X:F2}, {convexHull[i].Y:F2})");
+                }
+
+                // 目标角点数 = 检出的垂直墙面方向数量（通常为4）
+                int targetCorners = detectedWalls
+                    .Where(w => w.Direction != WallSeparationAnalyzer.WallDirection.Horizontal)
+                    .Select(w => w.Direction)
+                    .Distinct()
+                    .Count();
+                targetCorners = Math.Max(3, Math.Min(4, targetCorners)); // 至少3，最多4
+
+                var simplified = SimplifyHullToNCorners(convexHull, targetCorners);
+                System.Diagnostics.Debug.WriteLine($"简化到 {simplified.Count} 个角点 (目标 {targetCorners})");
+                return simplified;
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("凸包计算失败，使用简化边界");
+                return CalculateSimpleBoundary(allWallPoints2D);
+            }
+        }
+
+        /// <summary>
+        /// 使用Graham扫描算法计算凸包
+        /// </summary>
+        private List<Vector2> CalculateConvexHull(List<Vector2> points)
+        {
+            if (points.Count < 3) return new List<Vector2>(points);
+
+            // 去除重复点和相邻点
+            var uniquePoints = RemoveDuplicatePoints(points);
+            if (uniquePoints.Count < 3) return uniquePoints;
+
+            // 找到最底部的点（Y最小，如果Y相同则X最小）
+            var bottomPoint = uniquePoints.OrderBy(p => p.Y).ThenBy(p => p.X).First();
+            
+            // 按相对底部点的极角排序
+            var sortedPoints = uniquePoints.Where(p => p != bottomPoint)
+                .OrderBy(p => Math.Atan2(p.Y - bottomPoint.Y, p.X - bottomPoint.X))
+                .ToList();
+            
+            // 构建凸包
+            var hull = new List<Vector2> { bottomPoint };
+            
+            foreach (var point in sortedPoints)
+            {
+                // 移除不满足左转条件的点
+                while (hull.Count >= 2 && !IsLeftTurn(hull[hull.Count - 2], hull[hull.Count - 1], point))
+                {
+                    hull.RemoveAt(hull.Count - 1);
+                }
+                hull.Add(point);
+            }
+
+            return hull;
+        }
+
+        /// <summary>
+        /// 去除重复和过近的点
+        /// </summary>
+        private List<Vector2> RemoveDuplicatePoints(List<Vector2> points)
+        {
+            var uniquePoints = new List<Vector2>();
+            const float tolerance = 0.01f; // 1cm容差
+            
+            foreach (var point in points)
+            {
+                bool isDuplicate = false;
+                foreach (var existing in uniquePoints)
+                {
+                    if (Vector2.Distance(point, existing) < tolerance)
+                    {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+                
+                if (!isDuplicate)
+                {
+                    uniquePoints.Add(point);
+                }
+            }
+            
+            System.Diagnostics.Debug.WriteLine($"去重后: {uniquePoints.Count} 个独特点 (原始: {points.Count} 个)");
+            return uniquePoints;
+        }
+
+        /// <summary>
+        /// 判断三个点是否构成左转
+        /// </summary>
+        private bool IsLeftTurn(Vector2 a, Vector2 b, Vector2 c)
+        {
+            return ((b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X)) > 0;
+        }
+
+        /// <summary>
+        /// 简化边界计算（回退方案）
+        /// </summary>
+        private List<Vector2> CalculateSimpleBoundary(List<Vector2> points)
+        {
+            if (points.Count == 0) return new List<Vector2>();
+
+            // 使用包围盒作为最简单的边界
+            float minX = points.Min(p => p.X);
+            float maxX = points.Max(p => p.X);
+            float minY = points.Min(p => p.Y);
+            float maxY = points.Max(p => p.Y);
+
+            System.Diagnostics.Debug.WriteLine($"简化边界: X[{minX:F2}, {maxX:F2}], Y[{minY:F2}, {maxY:F2}]");
+
+            return new List<Vector2>
+            {
+                new Vector2(minX, minY), // 左下
+                new Vector2(maxX, minY), // 右下
+                new Vector2(maxX, maxY), // 右上
+                new Vector2(minX, maxY)  // 左上
+            };
+        }
+
+        /// <summary>
+        /// 将凸包简化为指定角点数：
+        /// 1) 先合并近似共线的连续顶点
+        /// 2) 再按角度变化/边长贡献度迭代删除最不重要的顶点
+        /// </summary>
+        private List<Vector2> SimplifyHullToNCorners(List<Vector2> hull, int targetCount)
+        {
+            if (hull == null || hull.Count <= targetCount) return new List<Vector2>(hull);
+
+            var simplified = MergeNearlyColinearVertices(hull, angleEpsDegrees: 5f, distanceEps: 0.02f);
+
+            // 如果仍然多于目标角点，迭代删除“贡献度”最小的顶点
+            while (simplified.Count > targetCount && simplified.Count > 3)
+            {
+                int removeIndex = FindLeastSignificantVertexIndex(simplified);
+                simplified.RemoveAt(removeIndex);
+            }
+
+            return simplified;
+        }
+
+        private List<Vector2> MergeNearlyColinearVertices(List<Vector2> polygon, float angleEpsDegrees, float distanceEps)
+        {
+            if (polygon.Count <= 3) return new List<Vector2>(polygon);
+
+            float angleEps = (float)(Math.PI * angleEpsDegrees / 180.0);
+            var result = new List<Vector2>();
+
+            for (int i = 0; i < polygon.Count; i++)
+            {
+                Vector2 a = polygon[(i - 1 + polygon.Count) % polygon.Count];
+                Vector2 b = polygon[i];
+                Vector2 c = polygon[(i + 1) % polygon.Count];
+
+                Vector2 ab = (b - a).Normalized();
+                Vector2 bc = (c - b).Normalized();
+
+                float angle = (float)Math.Acos(Math.Max(-1f, Math.Min(1f, ab.X * bc.X + ab.Y * bc.Y)));
+                bool almostColinear = Math.Abs(angle) < angleEps || Math.Abs(Math.PI - angle) < angleEps;
+
+                bool tooClose = Vector2.Distance(a, b) < distanceEps || Vector2.Distance(b, c) < distanceEps;
+
+                if (!(almostColinear && tooClose))
+                {
+                    result.Add(b);
+                }
+            }
+
+            if (result.Count < 3) return new List<Vector2>(polygon);
+            return result;
+        }
+
+        private int FindLeastSignificantVertexIndex(List<Vector2> polygon)
+        {
+            int n = polygon.Count;
+            int bestIndex = 0;
+            float bestScore = float.MaxValue; // 取更小的为更不重要
+
+            for (int i = 0; i < n; i++)
+            {
+                Vector2 prev = polygon[(i - 1 + n) % n];
+                Vector2 curr = polygon[i];
+                Vector2 next = polygon[(i + 1) % n];
+
+                // 角度变化越小，点越不重要
+                float angleScore = AngleChangeMagnitude(prev, curr, next);
+
+                // 距离贡献：当前点到其相邻边直线的距离
+                float distanceScore = PointToLineDistance(curr, prev, next);
+
+                // 综合分数（可调权重）
+                float score = angleScore * 0.7f + distanceScore * 0.3f;
+
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    bestIndex = i;
+                }
+            }
+
+            return bestIndex;
+        }
+
+        private float AngleChangeMagnitude(Vector2 a, Vector2 b, Vector2 c)
+        {
+            Vector2 ab = (b - a).Normalized();
+            Vector2 bc = (c - b).Normalized();
+            float dot = Math.Max(-1f, Math.Min(1f, ab.X * bc.X + ab.Y * bc.Y));
+            float angle = (float)Math.Acos(dot); // 0 ~ pi
+            return angle; // 越小越不重要
+        }
+
+        private float PointToLineDistance(Vector2 p, Vector2 a, Vector2 b)
+        {
+            Vector2 ab = b - a;
+            float len2 = ab.X * ab.X + ab.Y * ab.Y;
+            if (len2 < 1e-6f) return Vector2.Distance(p, a);
+            float t = ((p.X - a.X) * ab.X + (p.Y - a.Y) * ab.Y) / len2;
+            t = Math.Max(0f, Math.Min(1f, t));
+            Vector2 proj = new Vector2(a.X + t * ab.X, a.Y + t * ab.Y);
+            return Vector2.Distance(p, proj);
+        }
+
+        /// <summary>
+        /// 按顶点法线近似将多边形向外偏移（米）
+        /// 简化实现：
+        ///  - 先计算每个顶点的单位外法线（相邻边法线求和）
+        ///  - 沿该方向位移offsetMeters
+        /// 注意：此为近似方法，凹多边形可能出现轻微自交，范围选择用途可接受
+        /// </summary>
+        private List<Vector2> OffsetPolygonOutward(List<Vector2> polygon, float offsetMeters)
+        {
+            if (polygon == null || polygon.Count < 3) return polygon;
+
+            // 判断点序是否为逆时针；若为顺时针则反转，保证外法线方向一致
+            if (ComputeSignedArea(polygon) < 0)
+            {
+                polygon = new List<Vector2>(polygon);
+                polygon.Reverse();
+            }
+
+            var result = new List<Vector2>(polygon.Count);
+            int n = polygon.Count;
+
+            for (int i = 0; i < n; i++)
+            {
+                Vector2 prev = polygon[(i - 1 + n) % n];
+                Vector2 curr = polygon[i];
+                Vector2 next = polygon[(i + 1) % n];
+
+                // 边向量
+                Vector2 e1 = (curr - prev).Normalized();
+                Vector2 e2 = (next - curr).Normalized();
+
+                // 外法线：对于CCW多边形，使用右法线 (e.Y, -e.X)
+                Vector2 n1 = new Vector2(e1.Y, -e1.X);
+                Vector2 n2 = new Vector2(e2.Y, -e2.X);
+
+                // 顶点法线 = 相邻边外法线归一化
+                Vector2 vn = (n1 + n2);
+                float len = (float)Math.Sqrt(vn.X * vn.X + vn.Y * vn.Y);
+                if (len < 1e-6f)
+                {
+                    // 退化情况，使用其中一条边法线
+                    vn = n1;
+                    len = (float)Math.Sqrt(vn.X * vn.X + vn.Y * vn.Y);
+                }
+                vn = new Vector2(vn.X / len, vn.Y / len);
+
+                // 位移
+                Vector2 moved = new Vector2(curr.X + vn.X * offsetMeters, curr.Y + vn.Y * offsetMeters);
+                result.Add(moved);
+            }
+
+            return result;
+        }
+
+        private float ComputeSignedArea(List<Vector2> polygon)
+        {
+            float area = 0f;
+            for (int i = 0; i < polygon.Count; i++)
+            {
+                Vector2 a = polygon[i];
+                Vector2 b = polygon[(i + 1) % polygon.Count];
+                area += (a.X * b.Y - b.X * a.Y);
+            }
+            return 0.5f * area;
+        }
+
+        /// <summary>
+        /// 3D点降采样（均匀步进抽样）
+        /// </summary>
+        private List<Vector3> DownsamplePoints(List<Vector3> points, int maxPoints)
+        {
+            if (points == null || points.Count <= maxPoints) return points;
+            var result = new List<Vector3>(maxPoints);
+            double step = (double)points.Count / maxPoints;
+            double idx = 0.0;
+            for (int i = 0; i < maxPoints; i++)
+            {
+                int pos = (int)Math.Round(idx);
+                if (pos >= points.Count) pos = points.Count - 1;
+                result.Add(points[pos]);
+                idx += step;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 2D点降采样（均匀步进抽样）
+        /// </summary>
+        private List<Vector2> DownsamplePoints2D(List<Vector2> points, int maxPoints)
+        {
+            if (points == null || points.Count <= maxPoints) return points;
+            var result = new List<Vector2>(maxPoints);
+            double step = (double)points.Count / maxPoints;
+            double idx = 0.0;
+            for (int i = 0; i < maxPoints; i++)
+            {
+                int pos = (int)Math.Round(idx);
+                if (pos >= points.Count) pos = points.Count - 1;
+                result.Add(points[pos]);
+                idx += step;
+            }
+            return result;
+        }
+
+        /// <summary>
         /// 启动范围选择
         /// </summary>
         private void StartRangeSelection()
@@ -802,7 +1334,23 @@ namespace LoadPCDtest
 
                 System.Diagnostics.Debug.WriteLine("启动范围选择窗口");
                 
-                using (var rangeWindow = new RangeSelectionWindow(pointCloudData.OriginalPoints))
+                // 检查是否已经完成墙面分离，如果是则计算初始边界
+                List<Vector2> initialBoundary = null;
+                if (detectedWalls != null && detectedWalls.Count > 0)
+                {
+                    initialBoundary = CalculateWallBoundaries();
+                    if (initialBoundary != null && initialBoundary.Count >= 3)
+                    {
+                        // 向外扩张1米，保证包裹住原数据
+                        initialBoundary = OffsetPolygonOutward(initialBoundary, 1.0f);
+                    }
+                    if (initialBoundary != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine("使用墙面分离结果作为初始边界");
+                    }
+                }
+                
+                using (var rangeWindow = new RangeSelectionWindow(pointCloudData.OriginalPoints, initialBoundary))
                 {
                     rangeWindow.RangeSelected += OnRangeSelected;
                     
@@ -940,13 +1488,31 @@ namespace LoadPCDtest
                 string generatedFacadeInfo = renderer.ShowGeneratedFacades ? " [生成立面:开]" : " [生成立面:关]";
                 string biasInfo = renderer.ShowDetectedWalls ? $" [外推偏置:{currentOutwardBias:F2}m]" : "";
                 
-                Text = $"点云查看器 - {fileName} ({pointCloudData.Points.Count:N0} 个点) - " +
+                // 墙面分离状态
+                string wallSeparationInfo = "";
+                if (detectedWalls != null && detectedWalls.Count > 0)
+                {
+                    var verticalWalls = detectedWalls.Where(w => w.Direction != WallSeparationAnalyzer.WallDirection.Horizontal).Count();
+                    var horizontalWalls = detectedWalls.Count - verticalWalls;
+                    wallSeparationInfo = $" [墙面分离: {verticalWalls}垂直/{horizontalWalls}水平]";
+                    
+                    if (showWalls)
+                    {
+                        wallSeparationInfo += " [显示:开]";
+                    }
+                    else
+                    {
+                        wallSeparationInfo += " [显示:关]";
+                    }
+                }
+                
+                Text = $"点云查看器 增强版 - {fileName} ({pointCloudData.Points.Count:N0} 个点) - " +
                        $"缩放:{camera.GlobalScale:F1}x 点大小:{renderer.PointSize:F1} - " +
-                       $"{mappingName} - {colorMode}{facadeInfo}{generatedFacadeInfo}{biasInfo} [P:原始点云 G:生成立面 F1~F4:立面 H:墙点 [/]:外推偏置 Ctrl+E:导出]";
+                       $"{mappingName} - {colorMode}{facadeInfo}{generatedFacadeInfo}{biasInfo}{wallSeparationInfo} [Ctrl+W:墙面分离 Ctrl+E:导出]";
             }
             else
             {
-                Text = "点云查看器 - 简化版";
+                Text = "点云查看器 增强版 - 简化版";
             }
         }
 
@@ -1102,5 +1668,266 @@ namespace LoadPCDtest
                 MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        /// <summary>
+        /// 导出墙面检测后的航点文件（每个面一个.waypoints，蛇形排序）
+        /// </summary>
+        private void ExportDetectedFacesWaypoints()
+        {
+            try
+            {
+                if (lastDetectedFaces == null || lastDetectedFaces.Count == 0)
+                {
+                    MessageBox.Show("当前没有检测到的墙面可导出，请先完成范围选择和检测。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                using (var dlg = new SaveFileDialog())
+                {
+                    dlg.Title = "选择航点文件基名（将为每个面单独生成）";
+                    dlg.Filter = "Waypoints (*.waypoints)|*.waypoints|All Files (*.*)|*.*";
+                    dlg.FileName = "waypoints";
+                    if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+                    // 基名（不含扩展名）
+                    var baseNoExt = System.IO.Path.Combine(
+                        System.IO.Path.GetDirectoryName(dlg.FileName),
+                        System.IO.Path.GetFileNameWithoutExtension(dlg.FileName));
+
+                    // 基于当前点云生成四个立面的规律点云，并按蛇形排序导出
+                    var facadeMgr = new Analysis.FacadeManager();
+                    facadeMgr.AnalyzeFacades(pointCloudData.OriginalPoints);
+                    facadeMgr.ExportFacadesToQgc(baseNoExt);
+
+                    MessageBox.Show("航点文件已按面分别导出。", "导出完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"导出航点失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #region 墙面分离功能
+
+        /// <summary>
+        /// 执行墙面分离分析
+        /// </summary>
+        private async void PerformWallSeparation()
+        {
+            if (pointCloudData.Points == null || pointCloudData.Points.Count == 0)
+            {
+                MessageBox.Show("请先加载点云数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                // 显示进度对话框
+                using (var progressForm = new Form())
+                {
+                    progressForm.Text = "墙面分离分析";
+                    progressForm.Size = new Size(300, 100);
+                    progressForm.StartPosition = FormStartPosition.CenterParent;
+                    progressForm.FormBorderStyle = FormBorderStyle.FixedDialog;
+                    progressForm.MaximizeBox = false;
+                    progressForm.MinimizeBox = false;
+                    
+                    var label = new Label()
+                    {
+                        Text = "正在分析墙面，请稍候...",
+                        Dock = DockStyle.Fill,
+                        TextAlign = ContentAlignment.MiddleCenter
+                    };
+                    progressForm.Controls.Add(label);
+                    
+                    progressForm.Show(this);
+                    Application.DoEvents();
+
+                    // 在后台线程执行墙面分析
+                    var walls = await Task.Run(() => wallAnalyzer.AnalyzeWalls(pointCloudData.Points));
+                    
+                    progressForm.Close();
+
+                    if (walls != null && walls.Count > 0)
+                    {
+                        detectedWalls = walls;
+                        showWalls = true;
+                        
+                        // 显示分析结果
+                        var report = wallAnalyzer.GenerateWallReport(walls);
+                        MessageBox.Show(report, "墙面分析完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        
+                        // 更新标题和重新渲染
+                        UpdateTitle();
+                        gl.Invalidate();
+                    }
+                    else
+                    {
+                        MessageBox.Show("未检测到有效的墙面结构", "分析结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"墙面分离分析失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Diagnostics.Debug.WriteLine($"墙面分离分析异常: {ex}");
+            }
+        }
+
+        /// <summary>
+        /// 显示墙面检测参数设置对话框
+        /// </summary>
+        private void ShowWallDetectionSettings()
+        {
+            var settingsForm = new WallSeparationSettings(wallAnalyzer);
+            if (settingsForm.ShowDialog(this) == DialogResult.OK)
+            {
+                // 参数已在对话框中直接修改，这里可以选择重新执行分析
+                if (detectedWalls != null && MessageBox.Show("参数已更新，是否重新执行墙面分离分析？", "确认", 
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    PerformWallSeparation();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 切换墙面显示状态
+        /// </summary>
+        private void ToggleWallsVisibility()
+        {
+            showWalls = !showWalls;
+            gl.Invalidate();
+        }
+
+        /// <summary>
+        /// 切换原始点云显示状态
+        /// </summary>
+        private void ToggleOriginalPointCloudVisibility()
+        {
+            showOriginalPointCloud = !showOriginalPointCloud;
+            gl.Invalidate();
+        }
+
+        /// <summary>
+        /// 切换边界框显示
+        /// </summary>
+        private void ToggleBoundingBoxes()
+        {
+            // 这里可以添加边界框显示逻辑
+            // 暂时显示墙面统计信息
+            if (detectedWalls != null && detectedWalls.Count > 0)
+            {
+                wallRenderer.RenderWallStatistics(detectedWalls, Vector3.Zero);
+            }
+        }
+
+        /// <summary>
+        /// 导出分离的墙面数据
+        /// </summary>
+        private void ExportSeparatedWalls()
+        {
+            if (detectedWalls == null || detectedWalls.Count == 0)
+            {
+                MessageBox.Show("没有可导出的墙面数据，请先执行墙面分离分析", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                using (var saveDialog = new SaveFileDialog())
+                {
+                    saveDialog.Filter = "PLY文件|*.ply|所有文件|*.*";
+                    saveDialog.Title = "导出分离墙面";
+                    saveDialog.FileName = $"separated_walls_{DateTime.Now:yyyyMMdd_HHmmss}.ply";
+
+                    if (saveDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        ExportWallsToPly(detectedWalls, saveDialog.FileName);
+                        MessageBox.Show($"墙面数据已导出到: {saveDialog.FileName}", "导出成功", 
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 导出墙面分析报告
+        /// </summary>
+        private void ExportWallAnalysisReport()
+        {
+            if (detectedWalls == null || detectedWalls.Count == 0)
+            {
+                MessageBox.Show("没有可导出的分析报告，请先执行墙面分离分析", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                using (var saveDialog = new SaveFileDialog())
+                {
+                    saveDialog.Filter = "文本文件|*.txt|所有文件|*.*";
+                    saveDialog.Title = "导出墙面分析报告";
+                    saveDialog.FileName = $"wall_analysis_report_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+
+                    if (saveDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        var report = wallAnalyzer.GenerateWallReport(detectedWalls);
+                        File.WriteAllText(saveDialog.FileName, report, System.Text.Encoding.UTF8);
+                        MessageBox.Show($"分析报告已导出到: {saveDialog.FileName}", "导出成功", 
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 将墙面数据导出为PLY格式
+        /// </summary>
+        private void ExportWallsToPly(List<WallSeparationAnalyzer.Wall> walls, string filePath)
+        {
+            using (var writer = new StreamWriter(filePath))
+            {
+                // 计算总点数
+                int totalPoints = walls.Sum(w => w.Points.Count);
+                
+                // 写入PLY头部
+                writer.WriteLine("ply");
+                writer.WriteLine("format ascii 1.0");
+                writer.WriteLine($"element vertex {totalPoints}");
+                writer.WriteLine("property float x");
+                writer.WriteLine("property float y");
+                writer.WriteLine("property float z");
+                writer.WriteLine("property uchar red");
+                writer.WriteLine("property uchar green");
+                writer.WriteLine("property uchar blue");
+                writer.WriteLine("end_header");
+
+                // 写入点数据
+                foreach (var wall in walls)
+                {
+                    var color = wall.Color;
+                    byte r = (byte)(color.X * 255);
+                    byte g = (byte)(color.Y * 255);
+                    byte b = (byte)(color.Z * 255);
+
+                    foreach (var point in wall.Points)
+                    {
+                        writer.WriteLine($"{point.X:F6} {point.Y:F6} {point.Z:F6} {r} {g} {b}");
+                    }
+                }
+            }
+        }
+
+        #endregion
     }
 }
