@@ -38,6 +38,9 @@ namespace LoadPCDtest
         private Point lastMouse;
         // 最近一次墙面检测上下文
         private List<Analysis.WallRefinement.WallFace> lastDetectedFaces = null;
+        private List<List<Vector3>> lastWallSampledPointsByFace = null; // 与PLY一致的每面采样点
+        private float lastAlongSpacing = 0f;
+        private float lastZSpacing = 0f;
         private float lastZMin = 0f;
         private float lastZMax = 0f;
         private List<Vector2> lastPolygon = null;
@@ -1207,6 +1210,13 @@ namespace LoadPCDtest
             return Vector2.Distance(p, proj);
         }
 
+        // 始终输出6位小数，且不四舍五入（按小数第6位截断，向0取整）
+        private static string Format6(double v)
+        {
+            double t = Math.Truncate(v * 1_000_000.0) / 1_000_000.0;
+            return t.ToString("0.000000", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
         /// <summary>
         /// 按顶点法线近似将多边形向外偏移（米）
         /// 简化实现：
@@ -1659,7 +1669,60 @@ namespace LoadPCDtest
 
                 float along = Analysis.WallDetectionSettings.Defaults.AlongSpacingMeters;
                 float zspace = Analysis.WallDetectionSettings.Defaults.ZSpacingMeters;
-                Analysis.WallRefinement.ExportFacesAsPly(lastDetectedFaces, outPath, lastZMin, lastZMax, alongSpacing: along, zSpacing: zspace);
+
+                // 生成并缓存与PLY一致的每面采样点，确保航点与PLY完全一致
+                lastAlongSpacing = along; lastZSpacing = zspace;
+                lastWallSampledPointsByFace = new List<List<Vector3>>();
+                using (var sw = new StreamWriter(outPath, false))
+                {
+                    // 预统计总点数
+                    int total = 0;
+                    foreach (var f in lastDetectedFaces)
+                    {
+                        var dir2 = f.End - f.Start;
+                        float len = dir2.Length;
+                        if (len < 1e-6f) continue;
+                        int samplesAlong = Math.Max(2, (int)Math.Ceiling(len / Math.Max(1e-3f, along)) + 1);
+                        int samplesZ = Math.Max(2, (int)Math.Ceiling((lastZMax - lastZMin) / Math.Max(1e-3f, zspace)) + 1);
+                        total += samplesAlong * samplesZ;
+                    }
+
+                    // 写头
+                    sw.WriteLine("ply");
+                    sw.WriteLine("format ascii 1.0");
+                    sw.WriteLine($"element vertex {total}");
+                    sw.WriteLine("property double x");
+                    sw.WriteLine("property double y");
+                    sw.WriteLine("property double z");
+                    sw.WriteLine("end_header");
+
+                    // 写点并缓存分面采样
+                    foreach (var f in lastDetectedFaces)
+                    {
+                        var facePts = new List<Vector3>();
+                        var dir2 = f.End - f.Start;
+                        float len = dir2.Length;
+                        if (len < 1e-6f) { lastWallSampledPointsByFace.Add(facePts); continue; }
+                        int samplesAlong = Math.Max(2, (int)Math.Ceiling(len / Math.Max(1e-3f, along)) + 1);
+                        int samplesZ = Math.Max(2, (int)Math.Ceiling((lastZMax - lastZMin) / Math.Max(1e-3f, zspace)) + 1);
+                        for (int i = 0; i < samplesAlong; i++)
+                        {
+                            float t = (float)i / (samplesAlong - 1);
+                            var p2 = f.Start + t * dir2;
+                            for (int j = 0; j < samplesZ; j++)
+                            {
+                                float tz = (float)j / (samplesZ - 1);
+                                float z = lastZMin + (lastZMax - lastZMin) * tz;
+                                var p3 = new Vector3(p2.X, p2.Y, z);
+                                // 使用InvariantCulture避免逗号作为小数点
+                                var ci = System.Globalization.CultureInfo.InvariantCulture;
+                                facePts.Add(p3);
+                                sw.WriteLine(Format6(p3.X) + " " + Format6(p3.Y) + " " + Format6(p3.Z));
+                            }
+                        }
+                        lastWallSampledPointsByFace.Add(facePts);
+                    }
+                }
                 System.Diagnostics.Debug.WriteLine($"墙面已导出: {outPath}");
                 MessageBox.Show($"已导出: {outPath}", "导出完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -1694,18 +1757,101 @@ namespace LoadPCDtest
                         System.IO.Path.GetDirectoryName(dlg.FileName),
                         System.IO.Path.GetFileNameWithoutExtension(dlg.FileName));
 
-                    // 基于当前点云生成四个立面的规律点云，并按蛇形排序导出
-                    var facadeMgr = new Analysis.FacadeManager();
-                    facadeMgr.AnalyzeFacades(pointCloudData.OriginalPoints);
-                    facadeMgr.ExportFacadesToQgc(baseNoExt);
+                    // 若之前未导出PLY，则即时生成一次并缓存（保证一致）
+                    if (lastWallSampledPointsByFace == null)
+                    {
+                        // 触发一次PLY导出逻辑但不写文件？这里直接基于faces生成缓存
+                        lastAlongSpacing = Analysis.WallDetectionSettings.Defaults.AlongSpacingMeters;
+                        lastZSpacing = Analysis.WallDetectionSettings.Defaults.ZSpacingMeters;
+                        lastWallSampledPointsByFace = new List<List<Vector3>>();
+                        foreach (var f in lastDetectedFaces)
+                        {
+                            var facePts = Analysis.WallRefinement.GenerateWallPoints(new List<Analysis.WallRefinement.WallFace> { f }, lastZMin, lastZMax, lastAlongSpacing, lastZSpacing);
+                            lastWallSampledPointsByFace.Add(facePts);
+                        }
+                    }
 
-                    MessageBox.Show("航点文件已按面分别导出。", "导出完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // 使用缓存的与PLY一致的数据逐面导出
+                    for (int idx = 0; idx < lastDetectedFaces.Count; idx++)
+                    {
+                        var pts = (lastWallSampledPointsByFace != null && idx < lastWallSampledPointsByFace.Count)
+                            ? lastWallSampledPointsByFace[idx]
+                            : new List<Vector3>();
+                        var ordered = SnakeOrderPoints(pts, Math.Max(0.01f, lastZSpacing * 0.6f));
+                        if (ordered.Count == 0) continue;
+
+                        var outPath = baseNoExt + $"_face_{idx + 1}.waypoints";
+                        using (var sw = new StreamWriter(outPath, false))
+                        {
+                            sw.WriteLine("QGC WPL 110");
+                            var ci = System.Globalization.CultureInfo.InvariantCulture;
+                            for (int i = 0; i < ordered.Count; i++)
+                            {
+                                var p = ordered[i];
+                                int seq = i;
+                                int current = (i == 0) ? 1 : 0;
+                                int frame = 1;     // MAV_FRAME_GLOBAL
+                                int command = 16;  // NAV_WAYPOINT
+                                double q1 = 0, q2 = 0, q3 = 0, q4 = 0; // 保留参数
+                                double lat = p.X; // X->lat, Y->lon, Z->alt
+                                double lon = p.Y;
+                                double alt = p.Z;
+                                int autocontinue = 1;
+                                sw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                    "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\t{9}\t{10}\t{11}",
+                                    seq, current, frame, command,
+                                    Format6(q1), Format6(q2), Format6(q3), Format6(q4),
+                                    Format6(lat), Format6(lon), Format6(alt), autocontinue));
+                            }
+                        }
+                        System.Diagnostics.Debug.WriteLine($"已导出航点: {outPath} ({ordered.Count} 个)");
+                    }
+
+                    MessageBox.Show("航点文件已按检测墙面分别导出。", "导出完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"导出航点失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        /// <summary>
+        /// 将点按“Z自上而下分层 + X从左到右（奇偶层蛇形）”排序
+        /// </summary>
+        private List<Vector3> SnakeOrderPoints(List<Vector3> pts, float layerMergeEpsilon)
+        {
+            var result = new List<Vector3>();
+            if (pts == null || pts.Count == 0) return result;
+
+            var sorted = pts.OrderByDescending(p => p.Z).ToList();
+            var layers = new List<List<Vector3>>();
+            foreach (var p in sorted)
+            {
+                if (layers.Count == 0)
+                {
+                    layers.Add(new List<Vector3> { p });
+                    continue;
+                }
+                var current = layers[layers.Count - 1];
+                if (Math.Abs(current[0].Z - p.Z) <= layerMergeEpsilon)
+                {
+                    current.Add(p);
+                }
+                else
+                {
+                    layers.Add(new List<Vector3> { p });
+                }
+            }
+
+            for (int i = 0; i < layers.Count; i++)
+            {
+                var layer = layers[i].OrderBy(pt => pt.X).ToList();
+                if (i % 2 == 1) layer.Reverse();
+                result.AddRange(layer);
+            }
+
+            return result;
         }
 
         #region 墙面分离功能
@@ -1904,9 +2050,9 @@ namespace LoadPCDtest
                 writer.WriteLine("ply");
                 writer.WriteLine("format ascii 1.0");
                 writer.WriteLine($"element vertex {totalPoints}");
-                writer.WriteLine("property float x");
-                writer.WriteLine("property float y");
-                writer.WriteLine("property float z");
+                writer.WriteLine("property double x");
+                writer.WriteLine("property double y");
+                writer.WriteLine("property double z");
                 writer.WriteLine("property uchar red");
                 writer.WriteLine("property uchar green");
                 writer.WriteLine("property uchar blue");
@@ -1920,9 +2066,10 @@ namespace LoadPCDtest
                     byte g = (byte)(color.Y * 255);
                     byte b = (byte)(color.Z * 255);
 
+                    var ci = System.Globalization.CultureInfo.InvariantCulture;
                     foreach (var point in wall.Points)
                     {
-                        writer.WriteLine($"{point.X:F6} {point.Y:F6} {point.Z:F6} {r} {g} {b}");
+                        writer.WriteLine(Format6(point.X) + " " + Format6(point.Y) + " " + Format6(point.Z) + " " + r + " " + g + " " + b);
                     }
                 }
             }

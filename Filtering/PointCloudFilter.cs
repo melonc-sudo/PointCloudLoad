@@ -13,6 +13,11 @@ namespace LoadPCDtest.Filtering
     /// </summary>
     public static class PointCloudFilter
     {
+        private static string Format6(double v)
+        {
+            double t = Math.Truncate(v * 1_000_000.0) / 1_000_000.0;
+            return t.ToString("0.000000", System.Globalization.CultureInfo.InvariantCulture);
+        }
         /// <summary>
         /// 使用多边形过滤点云数据
         /// </summary>
@@ -97,15 +102,15 @@ namespace LoadPCDtest.Filtering
                     writer.WriteLine("ply");
                     writer.WriteLine("format ascii 1.0");
                     writer.WriteLine($"element vertex {filteredPoints.Count}");
-                    writer.WriteLine("property float x");
-                    writer.WriteLine("property float y");
-                    writer.WriteLine("property float z");
+                    writer.WriteLine("property double x");
+                    writer.WriteLine("property double y");
+                    writer.WriteLine("property double z");
                     writer.WriteLine("end_header");
                     
                     // 点云数据
                     foreach (var point in filteredPoints)
                     {
-                        writer.WriteLine($"{point.X:F6} {point.Y:F6} {point.Z:F6}");
+                        writer.WriteLine(Format6(point.X) + " " + Format6(point.Y) + " " + Format6(point.Z));
                     }
                 }
                 

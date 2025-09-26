@@ -11,6 +11,12 @@ namespace LoadPCDtest.Analysis
 	/// </summary>
 	public static class WallRefinement
 	{
+        // 与主窗体相同的固定6位截断格式
+        private static string Format6(double v)
+        {
+            double t = Math.Truncate(v * 1_000_000.0) / 1_000_000.0;
+            return t.ToString("0.000000", System.Globalization.CultureInfo.InvariantCulture);
+        }
 		public static float LastSelectedRatio { get; private set; } = -1f;
 		public static bool HasReportedOnce { get; set; } = false;
 
@@ -294,14 +300,14 @@ namespace LoadPCDtest.Analysis
 				total += samplesAlong * samplesZ;
 			}
 
-			using (var sw = new StreamWriter(outputPath, false))
+            using (var sw = new StreamWriter(outputPath, false))
 			{
 				sw.WriteLine("ply");
 				sw.WriteLine("format ascii 1.0");
 				sw.WriteLine($"element vertex {total}");
-				sw.WriteLine("property float x");
-				sw.WriteLine("property float y");
-				sw.WriteLine("property float z");
+                sw.WriteLine("property double x");
+                sw.WriteLine("property double y");
+                sw.WriteLine("property double z");
 				sw.WriteLine("end_header");
 
 				foreach (var f in faces)
@@ -322,7 +328,7 @@ namespace LoadPCDtest.Analysis
 						{
 							float tz = (float)j / (samplesZ - 1);
 							float z = zMin + (zMax - zMin) * tz;
-							sw.WriteLine($"{p2.X:F6} {p2.Y:F6} {z:F6}");
+                            sw.WriteLine(Format6(p2.X) + " " + Format6(p2.Y) + " " + Format6(z));
 						}
 					}
 				}

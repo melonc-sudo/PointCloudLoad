@@ -638,7 +638,7 @@ namespace LoadPCDtest.Analysis
                         var p = ordered[i];
                         int seq = i;
                         int current = (i == 0) ? 1 : 0;
-                        int frame = 0;     // MAV_FRAME_GLOBAL（按需调整）
+                        int frame = 1;     // MAV_FRAME_GLOBAL（按需调整）
                         int command = 16;  // NAV_WAYPOINT
                         double p1 = 0, p2 = 0, p3 = 0, p4 = 0; // 预留参数
                         double lat = p.X;
